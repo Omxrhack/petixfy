@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+//Una sola importacion desde la raiz para que se reconosca todas las pantallas.
 import 'package:petixfy/routes/screens_routes/Screens.dart';
 
 void main() {
