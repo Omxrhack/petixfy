@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-//Una sola importacion desde la raiz para que se reconosca todas las pantallas.
-import 'package:petixfy/routes/screens_routes/Screens.dart';
+
+import 'package:petixfy/routes/screens_routes/app_routes_screens.dart';
 
 void main() {
   runApp(const MyApp());
@@ -12,9 +12,12 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(
+    return MaterialApp(
       title: 'Petixfy',
-      home: SlashScreens(),
+      // Iniciamos la applicacion en una ruta especifica , al estar en la raiz del proyecto , se abarca a todo lo demas.
+      initialRoute: AppRoute.inicialRoute,
+      routes: AppRoute.getMenuRoutes(),
+      onGenerateRoute: AppRoute.onGenerateRoute,
     );
   }
 }
