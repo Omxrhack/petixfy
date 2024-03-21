@@ -4,7 +4,7 @@ import 'package:petixfy/routes/screens_routes/Screens.dart';
 
 class AppRoute {
   // Iniciamos la ruta en "slider"
-  static const inicialRoute = 'slider';
+  static const inicialRoute = 'validar';
   static final menuOptions = <MenuOptions>{
     //Todas las pantalla estan aqui como metodos , las cargamos una vez al iniciar la app
     MenuOptions(
@@ -21,14 +21,19 @@ class AppRoute {
       route: 'LoginScreen',
       title: 'login',
       screen: const LoginScreen(),
-    )
+    ),
+    MenuOptions(
+      route: 'ValidarScreen',
+      screen: const ValidarScreen(),
+      title: 'validar',
+    ),
   };
 
   //Hacemos un mapeo de las pantallas para que la aplicacion las cargue solamente una vez
   static Map<String, Widget Function(BuildContext)> getMenuRoutes() {
     Map<String, Widget Function(BuildContext)> appRoutes = {};
     appRoutes
-        .addAll({'slider': (BuildContext context) => const SlashScreens()});
+        .addAll({'validar': (BuildContext context) => const ValidarScreen()});
     for (final options in menuOptions) {
       appRoutes
           .addAll({options.route: (BuildContext context) => options.screen});
