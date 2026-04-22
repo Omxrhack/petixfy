@@ -23,6 +23,21 @@ class AppRoute {
       screen: const LoginScreen(),
     ),
     MenuOptions(
+      route: 'RegisterScreen',
+      title: 'register',
+      screen: const RegisterScreen(),
+    ),
+    MenuOptions(
+      route: 'OtpScreen',
+      title: 'otp',
+      screen: const OtpScreen(),
+    ),
+    MenuOptions(
+      route: 'OnboardingScreen',
+      title: 'onboarding',
+      screen: const OnboardingScreen(),
+    ),
+    MenuOptions(
       route: 'ValidarScreen',
       screen: const ValidarScreen(),
       title: 'validar',

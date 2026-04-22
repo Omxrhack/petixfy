@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:petixfy/routes/screens_routes/app_routes_screens.dart';
+import 'package:petixfy/services/auth_state.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -11,6 +12,7 @@ void main() async {
     anonKey:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5dXFoZnNncnNxYWt1aHRzZ3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTA5NjUxODcsImV4cCI6MjAyNjU0MTE4N30.LJ2PfOT6DBT6Yf01T3KzS7cUIqAR8hNLYmOdahb7nbs',
   );
+  await AuthState.hydrate();
 
   runApp(const MyApp());
 }

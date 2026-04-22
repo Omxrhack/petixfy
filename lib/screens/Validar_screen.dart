@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:petixfy/main.dart';
+import 'package:petixfy/services/auth_state.dart';
 
 class ValidarScreen extends StatefulWidget {
   const ValidarScreen({Key? key}) : super(key: key);
@@ -10,7 +10,6 @@ class ValidarScreen extends StatefulWidget {
 
 class _ValidarScreenState extends State<ValidarScreen> {
   @override
-  @override
   void initState() {
     _redirect();
     super.initState();
@@ -18,12 +17,28 @@ class _ValidarScreenState extends State<ValidarScreen> {
 
   Future<void> _redirect() async {
     await Future.delayed(const Duration(seconds: 3));
-    final session = supabase.auth.currentSession;
     if (!mounted) return;
-    if (session != null) {
-      Navigator.pushReplacementNamed(context, 'HomeScreen');
-    } else {
+    if (AuthState.accessToken == null || AuthState.refreshToken == null) {
       Navigator.pushReplacementNamed(context, 'SlashScreens');
+      return;
+    }
+
+    if (!AuthState.isVerified) {
+      Navigator.pushReplacementNamed(
+        context,
+        'OtpScreen',
+        arguments: {'email': AuthState.email},
+      );
+      return;
+    }
+
+    if (!AuthState.onboardingCompleted) {
+      Navigator.pushReplacementNamed(context, 'OnboardingScreen');
+      return;
+    }
+
+    if (AuthState.isVerified && AuthState.onboardingCompleted) {
+      Navigator.pushReplacementNamed(context, 'HomeScreen');
     }
   }
 
