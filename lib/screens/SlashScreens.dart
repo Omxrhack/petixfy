@@ -2,7 +2,6 @@
 
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
-import 'package:petixfy/main.dart';
 
 class SlashScreens extends StatefulWidget {
   const SlashScreens({Key? key}) : super(key: key);
@@ -12,12 +11,6 @@ class SlashScreens extends StatefulWidget {
 }
 
 class _SlashScreensState extends State<SlashScreens> {
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
   @override
   Widget build(BuildContext context) {
     List<PageViewModel> getPages() {
@@ -42,7 +35,7 @@ class _SlashScreensState extends State<SlashScreens> {
           ),
         ),
         onDone: () {
-          Navigator.pushNamed(context, 'LoginScreen');
+          Navigator.pushNamed(context, 'RegisterScreen');
         },
         next: const Text(
           "",

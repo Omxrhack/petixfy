@@ -1,9 +1,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:petixfy/main.dart';
-
-import '../routes/screens_routes/Screens.dart';
+import 'package:petixfy/services/auth_state.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,13 +16,9 @@ class HomeScreen extends StatelessWidget {
             const Text('HomeScreen'),
             ElevatedButton(
               onPressed: () async {
-                final response = await supabase.auth.signOut();
-
-                // Redirige al usuario a la pantalla de inicio de sesión después de cerrar la sesión
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => const LoginScreen()),
-                );
+                await AppAuthState.clear();
+                if (!context.mounted) return;
+                Navigator.pushReplacementNamed(context, 'LoginScreen');
               },
               child: const Text('Cerrar Sesion'),
             )

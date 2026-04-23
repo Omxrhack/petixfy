@@ -27,7 +27,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       await AuthApi.register(email: email, password: password);
-      await AuthState.save(newEmail: email, newIsVerified: false, newOnboardingCompleted: false);
+      await AppAuthState.save(
+        newEmail: email,
+        newIsVerified: false,
+        newOnboardingCompleted: false,
+      );
       if (!mounted) return;
       Navigator.pushNamed(
         context,

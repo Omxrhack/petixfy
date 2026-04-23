@@ -1,110 +1,102 @@
-// ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously
-
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:petixfy/main.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../routes/screens_routes/Screens.dart';
+import 'package:provider/provider.dart';
+import 'package:petixfy/providers/auth_provider.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+  const LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailControler = TextEditingController();
-
-  late final StreamSubscription<AuthState> _authSubscription;
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-    _authSubscription = supabase.auth.onAuthStateChange.listen((event) {
-      final session = event.session;
-      if (session != null) {
-        Navigator.of(context).pushReplacementNamed('HomeScreen');
-      }
-    });
-  }
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
 
   @override
   void dispose() {
-    // TODO: implement dispose
-    _emailControler.dispose();
-    _authSubscription.cancel();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
+  }
+
+  Future<void> _login() async {
+    final authProvider = context.read<AuthProvider>();
+    final success = await authProvider.signIn(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+    if (!mounted) return;
+    if (!success) {
+      final message = authProvider.errorMessage ?? 'Login failed';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final user = authProvider.currentUser;
+    if (user == null) return;
+
+    if (!user.isVerified) {
+      Navigator.pushReplacementNamed(
+        context,
+        'OtpScreen',
+        arguments: {'email': user.email},
+      );
+    } else if (!user.onboardingCompleted) {
+      Navigator.pushReplacementNamed(context, 'ClientOnboardingScreen');
+    } else {
+      Navigator.pushReplacementNamed(context, 'HomeScreen');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextFormField(
-              controller: _emailControler,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-              ),
-              validator: (value) {
-                if (value!.isEmpty) {
-                  return 'Porfavor ingrese una contraseña';
-                }
-                return null;
-              },
-            ),
-            ElevatedButton(
-                onPressed: () async {
-                  try {
-                    final email = _emailControler.text.trim();
-                    final user = await supabase.auth.getUser(email);
+    final authProvider = context.watch<AuthProvider>();
+    final isLoading = authProvider.isLoading;
 
-                    if (user != null) {
-                      // El usuario ya existe, redirige a la pantalla de inicio
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomeScreen()),
-                      );
-                    } else {
-                      // El usuario no existe, procede con el inicio de sesión
-                      await supabase.auth.signInWithOtp(
-                        email: email,
-                        emailRedirectTo:
-                            'io.supabase.flutterquickstart://login-callback/',
-                      );
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              '¡Correcto! , revisa tu correo para confirmar.',
-                              style: TextStyle(color: Colors.white),
-                            ),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    }
-                  } catch (error) {
-                    print('Error: $error');
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          '!Error! , intenta de nuevo. ',
-                          style: TextStyle(color: Colors.white),
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-                child: const Text('Login')),
-          ],
+    return Scaffold(
+      appBar: AppBar(title: const Text('Login')),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: const InputDecoration(labelText: 'Email'),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Contrasena'),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: isLoading ? null : _login,
+                child: isLoading
+                    ? const SizedBox(
+                        height: 18,
+                        width: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Login'),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: isLoading ? null : () => Navigator.pushNamed(context, 'RegisterScreen'),
+                child: const Text('No tienes cuenta? Registrate'),
+              ),
+            ],
+          ),
         ),
       ),
     );

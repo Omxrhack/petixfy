@@ -18,30 +18,31 @@ class _ValidarScreenState extends State<ValidarScreen> {
   Future<void> _redirect() async {
     await Future.delayed(const Duration(seconds: 3));
     if (!mounted) return;
-    if (AuthState.accessToken == null || AuthState.refreshToken == null) {
+    if (AppAuthState.accessToken == null || AppAuthState.refreshToken == null) {
       Navigator.pushReplacementNamed(context, 'SlashScreens');
       return;
     }
 
-    if (!AuthState.isVerified) {
+    if (!AppAuthState.isVerified) {
       Navigator.pushReplacementNamed(
         context,
         'OtpScreen',
-        arguments: {'email': AuthState.email},
+        arguments: {'email': AppAuthState.email},
       );
       return;
     }
 
-    if (!AuthState.onboardingCompleted) {
-      Navigator.pushReplacementNamed(context, 'OnboardingScreen');
+    if (!AppAuthState.onboardingCompleted) {
+      Navigator.pushReplacementNamed(context, 'ClientOnboardingScreen');
       return;
     }
 
-    if (AuthState.isVerified && AuthState.onboardingCompleted) {
+    if (AppAuthState.isVerified && AppAuthState.onboardingCompleted) {
       Navigator.pushReplacementNamed(context, 'HomeScreen');
     }
   }
 
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(

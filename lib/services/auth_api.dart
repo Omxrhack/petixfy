@@ -46,12 +46,8 @@ class AuthApi {
     return data;
   }
 
-  static Future<Map<String, dynamic>> onboarding({
-    required String role,
-    required String fullName,
-    required String phone,
-  }) async {
-    final token = AuthState.accessToken;
+  static Future<Map<String, dynamic>> onboarding(Map<String, dynamic> payload) async {
+    final token = AppAuthState.accessToken;
     if (token == null || token.isEmpty) {
       throw Exception('No active session for onboarding');
     }
@@ -62,20 +58,16 @@ class AuthApi {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
       },
-      body: jsonEncode({
-        'role': role,
-        'full_name': fullName,
-        'phone': phone,
-      }),
+      body: jsonEncode(payload),
     );
 
     final data = _decode(res);
     final profile = (data['profile'] as Map<String, dynamic>?) ?? <String, dynamic>{};
-    await AuthState.save(
-      newIsVerified: profile['is_verified'] as bool? ?? AuthState.isVerified,
+    await AppAuthState.save(
+      newIsVerified: profile['is_verified'] as bool? ?? AppAuthState.isVerified,
       newOnboardingCompleted:
-          profile['onboarding_completed'] as bool? ?? AuthState.onboardingCompleted,
-      newEmail: AuthState.email,
+          profile['onboarding_completed'] as bool? ?? AppAuthState.onboardingCompleted,
+      newEmail: AppAuthState.email,
     );
     return data;
   }
@@ -114,7 +106,7 @@ class AuthApi {
     required String fallbackEmail,
   }) async {
     final user = (data['user'] as Map<String, dynamic>?) ?? <String, dynamic>{};
-    await AuthState.save(
+    await AppAuthState.save(
       newAccessToken: data['access_token'] as String?,
       newRefreshToken: data['refresh_token'] as String?,
       newEmail: user['email'] as String? ?? fallbackEmail,

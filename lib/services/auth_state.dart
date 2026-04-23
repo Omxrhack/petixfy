@@ -3,8 +3,8 @@ import 'dart:convert';
 import 'package:petixfy/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class AuthState {
-  AuthState._();
+class AppAuthState {
+  AppAuthState._();
 
   static const _storageKey = 'vetgo_auth_state';
   static String? accessToken;
@@ -77,10 +77,7 @@ class AuthState {
       return;
     }
     try {
-      await supabase.auth.setSession(
-        accessToken!,
-        refreshToken!,
-      );
+      await supabase.auth.setSession(refreshToken!);
     } catch (_) {
       // Ignore session sync issues and keep local auth flow.
     }

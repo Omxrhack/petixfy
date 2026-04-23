@@ -46,7 +46,7 @@ class _OtpScreenState extends State<OtpScreen> {
     if (args is Map && args['email'] is String) {
       _email = args['email'] as String;
     }
-    _email ??= AuthState.email;
+    _email ??= AppAuthState.email;
   }
 
   @override
@@ -91,7 +91,7 @@ class _OtpScreenState extends State<OtpScreen> {
     try {
       await AuthApi.verifyOtp(email: email, token: _otp);
       if (!mounted) return;
-      Navigator.pushReplacementNamed(context, 'OnboardingScreen');
+      Navigator.pushReplacementNamed(context, 'ClientOnboardingScreen');
     } catch (e) {
       _showError(e.toString());
     } finally {

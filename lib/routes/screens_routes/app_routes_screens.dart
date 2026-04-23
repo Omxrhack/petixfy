@@ -38,6 +38,46 @@ class AppRoute {
       screen: const OnboardingScreen(),
     ),
     MenuOptions(
+      route: 'ClientOnboardingScreen',
+      title: 'client-onboarding',
+      screen: const ClientOnboardingScreen(),
+    ),
+    MenuOptions(
+      route: 'VetDashboardScreen',
+      title: 'vet-dashboard',
+      screen: const VetDashboardScreen(),
+    ),
+    MenuOptions(
+      route: 'VetScheduleScreen',
+      title: 'vet-schedule',
+      screen: const VetScheduleScreen(),
+    ),
+    MenuOptions(
+      route: 'EmergencyAlertScreen',
+      title: 'vet-emergency',
+      screen: const EmergencyAlertScreen(),
+    ),
+    MenuOptions(
+      route: 'PatientRecordScreen',
+      title: 'vet-patient-record',
+      screen: const PatientRecordScreen(),
+    ),
+    MenuOptions(
+      route: 'VetProfileScreen',
+      title: 'vet-profile',
+      screen: const VetProfileScreen(),
+    ),
+    MenuOptions(
+      route: 'VetActiveRouteScreen',
+      title: 'vet-active-route',
+      screen: const VetActiveRouteScreen(trackingId: 'demo-tracking-id'),
+    ),
+    MenuOptions(
+      route: 'ClientTrackingScreen',
+      title: 'client-tracking',
+      screen: const ClientTrackingScreen(trackingId: 'demo-tracking-id'),
+    ),
+    MenuOptions(
       route: 'ValidarScreen',
       screen: const ValidarScreen(),
       title: 'validar',

@@ -29,7 +29,7 @@
 			<string>Editor</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>io.supabase.flutterquickstart</string>
+				<string>vetgo</string>
 			</array>
 		</dict>
 	</array>
