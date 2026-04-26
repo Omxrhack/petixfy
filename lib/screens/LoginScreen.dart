@@ -72,6 +72,23 @@ class _LoginScreenState extends State<LoginScreen> {
       title: 'Iniciar sesión',
       subtitle: 'Accede con tu correo y contraseña',
       onBack: () => Navigator.maybePop(context),
+      bottom: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '¿No tienes cuenta?',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+          TextButton(
+            onPressed: isLoading
+                ? null
+                : () => Navigator.pushNamed(context, 'RegisterScreen'),
+            child: const Text('Regístrate'),
+          ),
+        ],
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -127,23 +144,6 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ],
         ),
-      ),
-      bottom: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '¿No tienes cuenta?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-          TextButton(
-            onPressed: isLoading
-                ? null
-                : () => Navigator.pushNamed(context, 'RegisterScreen'),
-            child: const Text('Regístrate'),
-          ),
-        ],
       ),
     );
   }

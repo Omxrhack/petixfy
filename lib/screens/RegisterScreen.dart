@@ -71,6 +71,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
       title: 'Crear cuenta',
       subtitle: 'Te enviaremos un código para verificar tu correo',
       onBack: () => Navigator.maybePop(context),
+      bottom: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            '¿Ya tienes cuenta?',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+          ),
+          TextButton(
+            onPressed: isLoading
+                ? null
+                : () => Navigator.pushReplacementNamed(context, 'LoginScreen'),
+            child: const Text('Inicia sesión'),
+          ),
+        ],
+      ),
       child: Form(
         key: _formKey,
         child: Column(
@@ -153,23 +170,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             ),
           ],
         ),
-      ),
-      bottom: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            '¿Ya tienes cuenta?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-          ),
-          TextButton(
-            onPressed: isLoading
-                ? null
-                : () => Navigator.pushReplacementNamed(context, 'LoginScreen'),
-            child: const Text('Inicia sesión'),
-          ),
-        ],
       ),
     );
   }
