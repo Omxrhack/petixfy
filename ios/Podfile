@@ -1,4 +1,42 @@
+require 'fileutils'
+
 platform :ios, '14.0'
+
+# Si el proyecto está en ~/Documents (iCloud), macOS añade xattrs a los binarios en
+# `build/native_assets/` y `codesign` falla. Flutter siempre usa `build/` relativo al
+# proyecto para native_assets (no respeta FLUTTER_BUILD_DIR de Xcode). Redirigimos
+# `build/` a ~/Library/Developer/... con un symlink cuando `build/` aún no existe.
+def ensure_flutter_build_outside_icloud
+  ios_dir = __dir__
+  project_root = File.expand_path('..', ios_dir)
+  build_path = File.join(project_root, 'build')
+  target = File.join(Dir.home, 'Library', 'Developer', 'flutter_build', File.basename(project_root))
+
+  if File.symlink?(build_path)
+    return if File.realpath(build_path) == File.realpath(target)
+
+    puts ''
+    puts "[!] `build/` es un symlink distinto al esperado. Para native_assets + iCloud use:"
+    puts "    rm \"#{build_path}\" && mkdir -p \"#{target}\" && ln -s \"#{target}\" \"#{build_path}\""
+    puts ''
+    return
+  end
+
+  if File.exist?(build_path)
+    puts ''
+    puts '[!] `build/` ya existe como carpeta (no symlink). iCloud puede romper codesign en native_assets.'
+    puts '    Cierra Xcode, luego ejecuta una sola vez:'
+    puts "    rm -rf \"#{build_path}\" && mkdir -p \"#{target}\" && ln -s \"#{target}\" \"#{build_path}\""
+    puts ''
+    return
+  end
+
+  FileUtils.mkdir_p(target)
+  File.symlink(target, build_path)
+  puts "[!] Creado `build` -> #{target} (recomendado con proyecto en Documents/iCloud)."
+end
+
+ensure_flutter_build_outside_icloud
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
