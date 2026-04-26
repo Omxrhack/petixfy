@@ -342,7 +342,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+			shellScript = "if [ -d \"${SRCROOT}/../build/native_assets/ios\" ]; then\n  /usr/bin/xattr -cr \"${SRCROOT}/../build/native_assets/ios\" 2>/dev/null || true\n  /bin/rm -rf \"${SRCROOT}/../build/native_assets/ios\"\nfi\n/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

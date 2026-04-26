@@ -35,6 +35,13 @@ end
 
 post_install do |installer|
   installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Xcode 16+ simulators reject very old deployment targets (warnings / build issues).
+      current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+      if current.nil? || current.to_s.empty? || current.to_f < 14.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '14.0'
+      end
+    end
     flutter_additional_ios_build_settings(target)
   end
 end
