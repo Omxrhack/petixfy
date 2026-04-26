@@ -16,7 +16,7 @@ def ensure_flutter_build_outside_icloud
     return if File.realpath(build_path) == File.realpath(target)
 
     puts ''
-    puts "[!] `build/` es un symlink distinto al esperado. Para native_assets + iCloud use:"
+    puts '[!] build/ es un symlink distinto al esperado. Para native_assets + iCloud use:'
     puts "    rm \"#{build_path}\" && mkdir -p \"#{target}\" && ln -s \"#{target}\" \"#{build_path}\""
     puts ''
     return
@@ -24,7 +24,7 @@ def ensure_flutter_build_outside_icloud
 
   if File.exist?(build_path)
     puts ''
-    puts '[!] `build/` ya existe como carpeta (no symlink). iCloud puede romper codesign en native_assets.'
+    puts '[!] build/ ya existe como carpeta (no symlink). iCloud puede romper codesign en native_assets.'
     puts '    Cierra Xcode, luego ejecuta una sola vez:'
     puts "    rm -rf \"#{build_path}\" && mkdir -p \"#{target}\" && ln -s \"#{target}\" \"#{build_path}\""
     puts ''
@@ -33,7 +33,7 @@ def ensure_flutter_build_outside_icloud
 
   FileUtils.mkdir_p(target)
   File.symlink(target, build_path)
-  puts "[!] Creado `build` -> #{target} (recomendado con proyecto en Documents/iCloud)."
+  puts "[!] Creado build/ -> #{target} (recomendado con proyecto en Documents/iCloud)."
 end
 
 ensure_flutter_build_outside_icloud
