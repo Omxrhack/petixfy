@@ -259,8 +259,8 @@ class AppTheme {
   // ============================================
   // TARJETAS
   // ============================================
-  static CardTheme _cardTheme({required bool isLight}) {
-    return CardTheme(
+  static CardThemeData _cardTheme({required bool isLight}) {
+    return CardThemeData(
       color: isLight ? AppColors.cardLight : AppColors.cardDark,
       elevation: 2,
       shadowColor: AppColors.shadowLight,
@@ -324,8 +324,8 @@ class AppTheme {
   // ============================================
   // DIÁLOGOS
   // ============================================
-  static DialogTheme _dialogTheme({required bool isLight}) {
-    return DialogTheme(
+  static DialogThemeData _dialogTheme({required bool isLight}) {
+    return DialogThemeData(
       backgroundColor: isLight ? AppColors.surfaceLight : AppColors.surfaceDark,
       elevation: 8,
       shape: RoundedRectangleBorder(

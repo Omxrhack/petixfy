@@ -35,7 +35,7 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.2
   path: ^1.8.3
-  flutter_native_splash: ^2.3.7
+  flutter_native_splash: ^2.4.0
   introduction_screen: ^3.1.12
   supabase_flutter: ^2.3.4
   http: ^1.2.2
@@ -119,5 +119,3 @@ flutter_native_splash:
     image_dark: assets/splash.png
   web: true
   web_image_mode: center
-  web_color: "#00A99D"
-  web_color_dark: "#008F82"
