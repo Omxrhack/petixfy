@@ -1,4 +1,5 @@
 {
     "java.configuration.updateBuildConfiguration": "interactive",
-    "dart.flutterSdkPath": "/Users/omarbermejo/flutter/flutter"
+    "dart.flutterSdkPath": "/Users/omarbermejo/flutter/flutter",
+    "dart.sdkPath": "/Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk"
 }

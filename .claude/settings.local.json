@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/**)",
+      "Read(//Users/omarbermejo/flutter/flutter/bin/cache/**)"
+    ]
+  }
+}
