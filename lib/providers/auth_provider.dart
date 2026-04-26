@@ -14,7 +14,17 @@ enum RegisterOutcome {
   /// El correo ya estaba registrado y verificado: el cliente debe ir al login.
   alreadyVerified,
 
+  /// Supabase no envió el correo porque se agotó la cuota del SMTP.
+  rateLimited,
+
   /// Falló el registro por otra razón (revisar [AuthProvider.errorMessage]).
+  error,
+}
+
+/// Resultado de un reenvío de OTP.
+enum ResendOtpOutcome {
+  sent,
+  rateLimited,
   error,
 }
 
@@ -25,6 +35,9 @@ enum LoginOutcome {
 
   /// El correo no está confirmado todavía: ir a la pantalla de OTP.
   emailNotConfirmed,
+
+  /// Supabase no pudo procesar la verificación porque se excedió la cuota de email.
+  rateLimited,
 
   /// Credenciales inválidas u otro error: revisar [AuthProvider.errorMessage].
   error,
@@ -81,12 +94,15 @@ class AuthProvider extends ChangeNotifier {
       return RegisterOutcome.goToOtp;
     } on AuthServiceException catch (e) {
       isLoading = false;
+      errorMessage = e.message;
       if (e.code == 'EMAIL_ALREADY_VERIFIED') {
-        errorMessage = e.message;
         notifyListeners();
         return RegisterOutcome.alreadyVerified;
       }
-      errorMessage = e.message;
+      if (e.code == 'EMAIL_RATE_LIMIT') {
+        notifyListeners();
+        return RegisterOutcome.rateLimited;
+      }
       notifyListeners();
       return RegisterOutcome.error;
     } catch (e) {
@@ -94,6 +110,28 @@ class AuthProvider extends ChangeNotifier {
       isLoading = false;
       notifyListeners();
       return RegisterOutcome.error;
+    }
+  }
+
+  /// Pide al backend reenviar el OTP de signup al correo dado.
+  Future<ResendOtpOutcome> resendOtp(String email) async {
+    errorMessage = null;
+    try {
+      await _authService.resendOtp(email);
+      notifyListeners();
+      return ResendOtpOutcome.sent;
+    } on AuthServiceException catch (e) {
+      errorMessage = e.message;
+      if (e.code == 'EMAIL_RATE_LIMIT') {
+        notifyListeners();
+        return ResendOtpOutcome.rateLimited;
+      }
+      notifyListeners();
+      return ResendOtpOutcome.error;
+    } catch (e) {
+      errorMessage = e.toString();
+      notifyListeners();
+      return ResendOtpOutcome.error;
     }
   }
 
@@ -141,17 +179,20 @@ class AuthProvider extends ChangeNotifier {
       currentUser = null;
       token = null;
       isLoading = false;
+      errorMessage = e.message;
       if (e.code == 'EMAIL_NOT_CONFIRMED') {
         // Guardamos el email para que la pantalla de OTP lo tenga aunque no haya sesión.
         await AppAuthState.save(
           newEmail: email,
           newIsVerified: false,
         );
-        errorMessage = e.message;
         notifyListeners();
         return LoginOutcome.emailNotConfirmed;
       }
-      errorMessage = e.message;
+      if (e.code == 'EMAIL_RATE_LIMIT') {
+        notifyListeners();
+        return LoginOutcome.rateLimited;
+      }
       notifyListeners();
       return LoginOutcome.error;
     } catch (e) {

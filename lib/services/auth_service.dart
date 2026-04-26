@@ -100,9 +100,40 @@ class AuthService {
     } on AuthServiceException {
       rethrow;
     } on DioException catch (e) {
-      throw AuthServiceException(_extractDioMessage(e));
+      throw AuthServiceException(
+        _extractDioMessage(e),
+        code: _extractDioCode(e),
+        statusCode: e.response?.statusCode,
+        data: _extractDioData(e),
+      );
     } catch (_) {
       throw const AuthServiceException('Unexpected error while verifying OTP');
+    }
+  }
+
+  /// Pide explícitamente al backend que reenvíe el OTP de signup al correo.
+  Future<Map<String, dynamic>> resendOtp(String email) async {
+    try {
+      final response = await _apiClient.dio.post(
+        '/api/auth/resend-otp',
+        data: {'email': email},
+      );
+      final data = response.data;
+      if (data is Map) {
+        return data.cast<String, dynamic>();
+      }
+      return <String, dynamic>{};
+    } on AuthServiceException {
+      rethrow;
+    } on DioException catch (e) {
+      throw AuthServiceException(
+        _extractDioMessage(e),
+        code: _extractDioCode(e),
+        statusCode: e.response?.statusCode,
+        data: _extractDioData(e),
+      );
+    } catch (_) {
+      throw const AuthServiceException('Unexpected error while resending OTP');
     }
   }
 
