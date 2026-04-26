@@ -6,6 +6,11 @@ import 'package:provider/provider.dart';
 import 'package:petixfy/providers/auth_provider.dart';
 import 'package:petixfy/services/auth_api.dart';
 import 'package:petixfy/services/auth_state.dart';
+import 'package:petixfy/theme/app_colors.dart';
+import 'package:petixfy/widgets/auth/auth_scaffold.dart';
+import 'package:petixfy/widgets/auth/labeled_text_field.dart';
+import 'package:petixfy/widgets/auth/otp_box.dart';
+import 'package:petixfy/widgets/onboarding/onboarding_button.dart';
 
 class OtpScreen extends StatefulWidget {
   const OtpScreen({super.key});
@@ -15,18 +20,28 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
+  static const int _otpLength = 6;
+  static const int _resendCountdown = 30;
+
   final List<TextEditingController> _controllers =
-      List.generate(6, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+      List.generate(_otpLength, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes =
+      List.generate(_otpLength, (_) => FocusNode());
+
   final _appLinks = AppLinks();
   StreamSubscription<Uri>? _linkSub;
+
   bool _loading = false;
   String? _email;
+
+  Timer? _timer;
+  int _secondsLeft = _resendCountdown;
 
   @override
   void initState() {
     super.initState();
     _bootstrapDeepLink();
+    _startCountdown();
   }
 
   Future<void> _bootstrapDeepLink() async {
@@ -39,6 +54,23 @@ class _OtpScreenState extends State<OtpScreen> {
     } catch (_) {
       // Ignore deep link startup issues and keep manual OTP entry.
     }
+  }
+
+  void _startCountdown() {
+    _timer?.cancel();
+    setState(() => _secondsLeft = _resendCountdown);
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_secondsLeft <= 1) {
+        timer.cancel();
+        setState(() => _secondsLeft = 0);
+      } else {
+        setState(() => _secondsLeft -= 1);
+      }
+    });
   }
 
   @override
@@ -54,6 +86,7 @@ class _OtpScreenState extends State<OtpScreen> {
   @override
   void dispose() {
     _linkSub?.cancel();
+    _timer?.cancel();
     for (final c in _controllers) {
       c.dispose();
     }
@@ -65,14 +98,15 @@ class _OtpScreenState extends State<OtpScreen> {
 
   void _tryFillFromUri(Uri uri) {
     final code = uri.queryParameters['code'] ?? uri.queryParameters['token'];
-    if (code == null || code.length < 6) return;
-    _fillOtp(code.substring(0, 6));
+    if (code == null || code.length < _otpLength) return;
+    _fillOtp(code.substring(0, _otpLength));
   }
 
   void _fillOtp(String code) {
-    for (int i = 0; i < 6; i++) {
+    for (int i = 0; i < _otpLength; i++) {
       _controllers[i].text = code[i];
     }
+    setState(() {});
     _verify();
   }
 
@@ -81,11 +115,11 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<void> _verify() async {
     final email = _email?.trim();
     if (email == null || email.isEmpty) {
-      _showError('No se encontró email para verificar OTP');
+      _showError('No se encontró un correo para verificar el OTP');
       return;
     }
-    if (_otp.length != 6) {
-      _showError('Ingresa un código de 6 dígitos');
+    if (_otp.length != _otpLength) {
+      _showError('Ingresa los $_otpLength dígitos del código');
       return;
     }
 
@@ -105,69 +139,129 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
-  void _onDigitChanged(int index, String value) {
-    if (value.length > 1) {
-      _controllers[index].text = value.substring(value.length - 1);
-    }
-    if (value.isNotEmpty && index < 5) {
-      _focusNodes[index + 1].requestFocus();
+  void _onCompleted(String code) {
+    if (!_loading) {
+      _verify();
     }
   }
 
   void _showError(String message) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message.replaceFirst('Exception: ', '')),
-        backgroundColor: Colors.red,
-      ),
-    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message.replaceFirst('Exception: ', ''),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Verificar código')),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Text(
-              'Te enviamos un código a ${_email ?? 'tu correo'}',
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(
-                6,
-                (i) => SizedBox(
-                  width: 42,
-                  child: TextField(
-                    controller: _controllers[i],
-                    focusNode: _focusNodes[i],
-                    textAlign: TextAlign.center,
-                    keyboardType: TextInputType.number,
-                    maxLength: 1,
-                    decoration: const InputDecoration(counterText: ''),
-                    onChanged: (v) => _onDigitChanged(i, v),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _loading ? null : _verify,
-              child: _loading
-                  ? const SizedBox(
-                      height: 18,
-                      width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Verificar OTP'),
-            ),
-          ],
+    final textTheme = Theme.of(context).textTheme;
+    final email = _email ?? 'tu correo';
+
+    return AuthScaffold(
+      title: 'Verificar correo',
+      subtitle: 'Te enviamos un código a $email',
+      headerIcon: Icons.mark_email_read_outlined,
+      onBack: () => Navigator.maybePop(context),
+      bottom: TextButton(
+        onPressed: _loading ? null : () => Navigator.maybePop(context),
+        child: Text(
+          'Cambiar correo',
+          style: textTheme.bodyMedium?.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+            fontSize: 15,
+          ),
         ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AuthFormCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppColors.primarySurface,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.mail_outline,
+                        color: AppColors.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Ingresa el código de 6 dígitos que enviamos a tu correo.',
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: AppColors.textSecondary,
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                OtpBoxGroup(
+                  length: _otpLength,
+                  controllers: _controllers,
+                  focusNodes: _focusNodes,
+                  onCompleted: _onCompleted,
+                ),
+                const SizedBox(height: 24),
+                OnboardingPrimaryButton(
+                  text: 'Verificar',
+                  icon: Icons.check_circle_outline,
+                  isLoading: _loading,
+                  onPressed: _loading ? null : _verify,
+                ),
+                const SizedBox(height: 16),
+                Center(
+                  child: _secondsLeft > 0
+                      ? Text(
+                          '¿No te llegó? Reenviar en ${_secondsLeft}s',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 14,
+                          ),
+                        )
+                      : TextButton(
+                          onPressed: _loading ? null : _startCountdown,
+                          child: Text(
+                            'Reenviar código',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
