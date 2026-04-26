@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Read(//Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/**)",
-      "Read(//Users/omarbermejo/flutter/flutter/bin/cache/**)"
+      "Read(//Users/omarbermejo/flutter/flutter/bin/cache/**)",
+      "Bash(/Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/bin/dart --version)",
+      "Bash(flutter doctor *)"
     ]
   }
 }
