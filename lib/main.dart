@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:petixfy/providers/auth_provider.dart';
 import 'package:petixfy/routes/screens_routes/app_routes_screens.dart';
 import 'package:petixfy/services/auth_state.dart';
+import 'package:petixfy/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
@@ -30,12 +31,15 @@ class MyApp extends StatelessWidget {
   const MyApp({
     Key? key,
   }) : super(key: key);
-  // This widget is the root of your application.
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Petixfy',
-      // Iniciamos la applicacion en una ruta especifica , al estar en la raiz del proyecto , se abarca a todo lo demas.
+      debugShowCheckedModeBanner: false,
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
       initialRoute: AppRoute.inicialRoute,
       routes: AppRoute.getMenuRoutes(),
       onGenerateRoute: AppRoute.onGenerateRoute,

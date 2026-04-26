@@ -46,6 +46,7 @@ dependencies:
   flutter_secure_storage: ^9.2.2
   google_maps_flutter: ^2.9.0
   geolocator: ^13.0.2
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:
@@ -105,7 +106,18 @@ flutter:
   # see https://flutter.dev/custom-fonts/#from-packages
 flutter_native_splash:
   color: "#00A99D"
+  color_dark: "#008F82"
   image: assets/splash.png
+  image_dark: assets/splash.png
   fullscreen: true
   android: true
   ios: true
+  android_12:
+    color: "#00A99D"
+    color_dark: "#008F82"
+    image: assets/splash.png
+    image_dark: assets/splash.png
+  web: true
+  web_image_mode: center
+  web_color: "#00A99D"
+  web_color_dark: "#008F82"

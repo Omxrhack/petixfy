@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:petixfy/services/auth_state.dart';
-import 'package:petixfy/theme/app_colors.dart';
+import '../theme/app_colors.dart';
 
-class ValidarScreen extends StatefulWidget {
-  const ValidarScreen({Key? key}) : super(key: key);
+/// Splash screen animado de Petixfy
+/// Se muestra después del splash nativo con animaciones suaves
+class AnimatedSplashScreen extends StatefulWidget {
+  final Widget nextScreen;
+  final Duration duration;
+
+  const AnimatedSplashScreen({
+    super.key,
+    required this.nextScreen,
+    this.duration = const Duration(milliseconds: 2000),
+  });
 
   @override
-  State<ValidarScreen> createState() => _ValidarScreenState();
+  State<AnimatedSplashScreen> createState() => _AnimatedSplashScreenState();
 }
 
-class _ValidarScreenState extends State<ValidarScreen>
+class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
     with TickerProviderStateMixin {
   late AnimationController _logoController;
   late AnimationController _textController;
+  late AnimationController _fadeOutController;
 
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
   late Animation<double> _textOpacity;
   late Animation<Offset> _textSlide;
+  late Animation<double> _fadeOut;
 
   @override
   void initState() {
@@ -27,16 +37,25 @@ class _ValidarScreenState extends State<ValidarScreen>
   }
 
   void _initAnimations() {
+    // Logo animation controller
     _logoController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
 
+    // Text animation controller
     _textController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
 
+    // Fade out controller
+    _fadeOutController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    // Logo scale animation (0.5 -> 1.0)
     _logoScale = Tween<double>(begin: 0.5, end: 1.0).animate(
       CurvedAnimation(
         parent: _logoController,
@@ -44,6 +63,7 @@ class _ValidarScreenState extends State<ValidarScreen>
       ),
     );
 
+    // Logo opacity animation
     _logoOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _logoController,
@@ -51,6 +71,7 @@ class _ValidarScreenState extends State<ValidarScreen>
       ),
     );
 
+    // Text opacity animation
     _textOpacity = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _textController,
@@ -58,6 +79,7 @@ class _ValidarScreenState extends State<ValidarScreen>
       ),
     );
 
+    // Text slide animation
     _textSlide = Tween<Offset>(
       begin: const Offset(0, 0.3),
       end: Offset.zero,
@@ -67,46 +89,45 @@ class _ValidarScreenState extends State<ValidarScreen>
         curve: Curves.easeOut,
       ),
     );
+
+    // Fade out animation
+    _fadeOut = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _fadeOutController,
+        curve: Curves.easeIn,
+      ),
+    );
   }
 
   void _startAnimationSequence() async {
+    // Start logo animation
     await Future.delayed(const Duration(milliseconds: 100));
-    if (!mounted) return;
     _logoController.forward();
 
+    // Start text animation after logo
     await Future.delayed(const Duration(milliseconds: 400));
-    if (!mounted) return;
     _textController.forward();
 
-    await Future.delayed(const Duration(milliseconds: 1500));
-    _redirect();
-  }
+    // Wait for the specified duration
+    await Future.delayed(widget.duration);
 
-  Future<void> _redirect() async {
-    if (!mounted) return;
+    // Fade out and navigate
+    await _fadeOutController.forward();
 
-    if (AppAuthState.accessToken == null ||
-        AppAuthState.refreshToken == null) {
-      Navigator.pushReplacementNamed(context, 'SlashScreens');
-      return;
-    }
-
-    if (!AppAuthState.isVerified) {
-      Navigator.pushReplacementNamed(
-        context,
-        'OtpScreen',
-        arguments: {'email': AppAuthState.email},
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              widget.nextScreen,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        ),
       );
-      return;
-    }
-
-    if (!AppAuthState.onboardingCompleted) {
-      Navigator.pushReplacementNamed(context, 'ClientOnboardingScreen');
-      return;
-    }
-
-    if (AppAuthState.isVerified && AppAuthState.onboardingCompleted) {
-      Navigator.pushReplacementNamed(context, 'HomeScreen');
     }
   }
 
@@ -114,11 +135,24 @@ class _ValidarScreenState extends State<ValidarScreen>
   void dispose() {
     _logoController.dispose();
     _textController.dispose();
+    _fadeOutController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _fadeOutController,
+      builder: (context, child) {
+        return Opacity(
+          opacity: _fadeOut.value,
+          child: _buildContent(),
+        );
+      },
+    );
+  }
+
+  Widget _buildContent() {
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -242,10 +276,30 @@ class _ValidarScreenState extends State<ValidarScreen>
   }
 }
 
-class AnimatedBuilder extends AnimatedWidget {
+/// Widget helper para animaciones
+class AnimatedBuilder extends StatelessWidget {
+  final Animation<double> animation;
   final Widget Function(BuildContext, Widget?) builder;
 
   const AnimatedBuilder({
+    super.key,
+    required this.animation,
+    required this.builder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder2(
+      animation: animation,
+      builder: builder,
+    );
+  }
+}
+
+class AnimatedBuilder2 extends AnimatedWidget {
+  final Widget Function(BuildContext, Widget?) builder;
+
+  const AnimatedBuilder2({
     super.key,
     required Animation<double> animation,
     required this.builder,
