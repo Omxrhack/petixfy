@@ -83,6 +83,7 @@ class OtpBox extends StatelessWidget {
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
               ],
+              cursorColor: AppColors.primary,
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: fontSize,
@@ -91,10 +92,16 @@ class OtpBox extends StatelessWidget {
               ),
               decoration: const InputDecoration(
                 counterText: '',
+                filled: false,
+                fillColor: Colors.transparent,
                 border: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 enabledBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
+                isDense: true,
               ),
               onChanged: onChanged,
               onSubmitted: onSubmitted,
