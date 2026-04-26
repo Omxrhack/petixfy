@@ -11,9 +11,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Supabase.initialize(
-    url: 'https://ayuqhfsgrsqakuhtsgwn.supabase.co',
-    anonKey:
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImF5dXFoZnNncnNxYWt1aHRzZ3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTA5NjUxODcsImV4cCI6MjAyNjU0MTE4N30.LJ2PfOT6DBT6Yf01T3KzS7cUIqAR8hNLYmOdahb7nbs',
+    url: const String.fromEnvironment(
+      'SUPABASE_URL',
+      defaultValue: 'https://hjxrfubrdqwhpynhzrlu.supabase.co',
+    ),
+    anonKey: const String.fromEnvironment(
+      'SUPABASE_ANON_KEY',
+      defaultValue:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhqeHJmdWJyZHF3aHB5bmh6cmx1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4MjY0OTAsImV4cCI6MjA5MjQwMjQ5MH0.aqij3VVjyT-MgeqAVKZjUsh3X6vuX628k8_-yU1PlBs',
+    ),
   );
   await AppAuthState.hydrate();
 
