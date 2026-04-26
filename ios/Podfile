@@ -23,12 +23,18 @@ def ensure_flutter_build_outside_icloud
   end
 
   if File.exist?(build_path)
+    # Heurística: en ~/Documents iCloud suele inyectar xattrs que rompen codesign en native_assets.
+    unless project_root.include?('Documents')
+      puts ''
+      puts '[!] build/ existe como carpeta. Si ves fallos de CodeSign en native_assets, ejecuta:'
+      puts "    rm -rf \"#{build_path}\" && mkdir -p \"#{target}\" && ln -s \"#{target}\" \"#{build_path}\""
+      puts ''
+      return
+    end
+
     puts ''
-    puts '[!] build/ ya existe como carpeta (no symlink). iCloud puede romper codesign en native_assets.'
-    puts '    Cierra Xcode, luego ejecuta una sola vez:'
-    puts "    rm -rf \"#{build_path}\" && mkdir -p \"#{target}\" && ln -s \"#{target}\" \"#{build_path}\""
-    puts ''
-    return
+    puts '[!] Proyecto bajo Documents: reemplazando build/ por enlace a ~/Library/Developer/...'
+    FileUtils.rm_rf(build_path)
   end
 
   FileUtils.mkdir_p(target)
