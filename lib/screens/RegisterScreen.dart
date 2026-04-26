@@ -47,10 +47,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     switch (outcome) {
       case RegisterOutcome.goToOtp:
-        if (authProvider.lastRegisterResent) {
+        if (authProvider.lastRegisterAlreadyExisted) {
           _showInfo(
             'Ese correo ya estaba registrado pero no verificado. '
-            'Te enviamos un nuevo código.',
+            'Usa el último código que recibiste o pide uno nuevo desde la pantalla siguiente.',
+            duration: const Duration(seconds: 6),
           );
         }
         Navigator.pushNamed(
@@ -66,13 +67,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
         Navigator.pushReplacementNamed(context, 'LoginScreen');
         return;
+      case RegisterOutcome.rateLimited:
+        _showError(
+          authProvider.errorMessage ??
+              'Has pedido demasiados códigos. Espera unos minutos.',
+        );
+        return;
       case RegisterOutcome.error:
         _showError(authProvider.errorMessage ?? 'No se pudo registrar');
         return;
     }
   }
 
-  void _showInfo(String message) {
+  void _showInfo(String message, {Duration? duration}) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
@@ -84,6 +91,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           backgroundColor: AppColors.primary,
           behavior: SnackBarBehavior.floating,
+          duration: duration ?? const Duration(seconds: 4),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),

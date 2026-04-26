@@ -42,12 +42,18 @@ class _LoginScreenState extends State<LoginScreen> {
       case LoginOutcome.emailNotConfirmed:
         _showInfo(
           authProvider.errorMessage ??
-              'Tu correo no está verificado. Te enviamos un nuevo código.',
+              'Tu correo no está verificado. Ingresa el código que te enviamos.',
         );
         Navigator.pushReplacementNamed(
           context,
           'OtpScreen',
           arguments: {'email': email},
+        );
+        return;
+      case LoginOutcome.rateLimited:
+        _showError(
+          authProvider.errorMessage ??
+              'Has pedido demasiados códigos. Espera unos minutos.',
         );
         return;
       case LoginOutcome.error:

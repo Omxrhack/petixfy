@@ -35,6 +35,7 @@ class _OtpScreenState extends State<OtpScreen> {
   StreamSubscription<Uri>? _linkSub;
 
   bool _loading = false;
+  bool _resending = false;
   String? _email;
 
   Timer? _timer;
@@ -148,6 +149,60 @@ class _OtpScreenState extends State<OtpScreen> {
     }
   }
 
+  Future<void> _resend() async {
+    final email = _email?.trim();
+    if (email == null || email.isEmpty) {
+      _showError('No se encontró un correo para reenviar el código');
+      return;
+    }
+    if (_resending) return;
+
+    setState(() => _resending = true);
+    final outcome = await context.read<AuthProvider>().resendOtp(email);
+    if (!mounted) return;
+    setState(() => _resending = false);
+
+    switch (outcome) {
+      case ResendOtpOutcome.sent:
+        _showInfo('Te reenviamos un nuevo código a $email');
+        _startCountdown();
+        return;
+      case ResendOtpOutcome.rateLimited:
+        _showError(
+          context.read<AuthProvider>().errorMessage ??
+              'Has pedido demasiados códigos. Espera unos minutos.',
+        );
+        return;
+      case ResendOtpOutcome.error:
+        _showError(
+          context.read<AuthProvider>().errorMessage ??
+              'No se pudo reenviar el código',
+        );
+        return;
+    }
+  }
+
+  void _showInfo(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+  }
+
   void _showError(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
@@ -250,15 +305,27 @@ class _OtpScreenState extends State<OtpScreen> {
                           ),
                         )
                       : TextButton(
-                          onPressed: _loading ? null : _startCountdown,
-                          child: Text(
-                            'Reenviar código',
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w700,
-                              fontSize: 15,
-                            ),
-                          ),
+                          onPressed:
+                              (_loading || _resending) ? null : _resend,
+                          child: _resending
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      AppColors.primary,
+                                    ),
+                                  ),
+                                )
+                              : Text(
+                                  'Reenviar código',
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 15,
+                                  ),
+                                ),
                         ),
                 ),
               ],

@@ -60,6 +60,7 @@ class AuthProvider extends ChangeNotifier {
 
   /// Información extra del último intento de registro.
   bool lastRegisterResent = false;
+  bool lastRegisterAlreadyExisted = false;
 
   /// Registro en backend; limpia sesión local y deja email pendiente de verificación OTP.
   ///
@@ -73,11 +74,13 @@ class AuthProvider extends ChangeNotifier {
     isLoading = true;
     errorMessage = null;
     lastRegisterResent = false;
+    lastRegisterAlreadyExisted = false;
     notifyListeners();
 
     try {
       final body = await _authService.register(email, password);
       lastRegisterResent = body['resent'] == true;
+      lastRegisterAlreadyExisted = body['already_registered'] == true;
 
       await _secureStorage.delete(key: ApiClient.accessTokenKey);
       await _secureStorage.delete(key: ApiClient.refreshTokenKey);
