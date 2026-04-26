@@ -1,8 +1,13 @@
 // ignore_for_file: non_constant_identifier_names
 
+/// @deprecated Este archivo está deprecado.
+/// Usar [IntroOnboardingScreen] en su lugar.
+/// Este archivo se mantiene solo para referencia y compatibilidad.
+
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 
+@Deprecated('Usar IntroOnboardingScreen en su lugar')
 class SlashScreens extends StatefulWidget {
   const SlashScreens({Key? key}) : super(key: key);
 

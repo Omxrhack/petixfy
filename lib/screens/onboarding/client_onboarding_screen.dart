@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:petixfy/providers/auth_provider.dart';
-import 'package:petixfy/widgets/vet_warm_theme.dart';
+import 'package:petixfy/theme/app_colors.dart';
+import 'package:petixfy/widgets/onboarding/onboarding_widgets.dart';
 
 class ClientOnboardingScreen extends StatefulWidget {
   const ClientOnboardingScreen({super.key});
@@ -10,10 +11,13 @@ class ClientOnboardingScreen extends StatefulWidget {
   State<ClientOnboardingScreen> createState() => _ClientOnboardingScreenState();
 }
 
-class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
-  static const int _totalSteps = 6;
+class _ClientOnboardingScreenState extends State<ClientOnboardingScreen>
+    with TickerProviderStateMixin {
+  static const int _totalSteps = 5;
 
   final PageController _pageController = PageController();
+  late AnimationController _animationController;
+
   final GlobalKey<FormState> _step1FormKey = GlobalKey<FormState>();
   final GlobalKey<FormState> _step3FormKey = GlobalKey<FormState>();
 
@@ -24,22 +28,61 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
 
   int _currentStep = 0;
   String? _selectedSpecies;
+  String? _selectedSex;
   bool? _isNeutered;
   String? _vaccineStatus;
-  String? _temperament;
+  List<String> _selectedTemperaments = [];
   bool _locationCaptured = false;
   double _weightKg = 12;
 
-  // Local map that accumulates each answer until final submit.
   final Map<String, dynamic> onboardingData = <String, dynamic>{
     'role': 'client',
     'client_details': <String, dynamic>{},
     'pet_profile': <String, dynamic>{},
   };
 
+  static const List<_StepInfo> _steps = [
+    _StepInfo(
+      title: 'Sobre ti',
+      subtitle: 'Cuéntanos cómo te llamas para personalizar tu experiencia',
+      icon: Icons.person_outline,
+    ),
+    _StepInfo(
+      title: 'Tu ubicación',
+      subtitle: 'Ayúdanos a llegar rápido cuando lo necesites',
+      icon: Icons.location_on_outlined,
+    ),
+    _StepInfo(
+      title: 'Tu mascota',
+      subtitle: 'Háblanos de tu mejor amigo',
+      icon: Icons.pets_outlined,
+    ),
+    _StepInfo(
+      title: 'Datos de salud',
+      subtitle: 'Información importante para su cuidado',
+      icon: Icons.favorite_outline,
+    ),
+    _StepInfo(
+      title: 'Personalidad',
+      subtitle: 'Esto ayuda a que el veterinario llegue preparado',
+      icon: Icons.psychology_outlined,
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+    _animationController.forward();
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
+    _animationController.dispose();
     _fullNameController.dispose();
     _phoneController.dispose();
     _homeNotesController.dispose();
@@ -47,14 +90,13 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
     super.dispose();
   }
 
-  double get _progressValue => (_currentStep + 1) / _totalSteps;
-
   void _useCurrentLocation() {
     setState(() {
       _locationCaptured = true;
       onboardingData['client_details'] = <String, dynamic>{
-        ...(onboardingData['client_details'] as Map<String, dynamic>? ?? <String, dynamic>{}),
-        'address_text': 'Ubicacion actual detectada',
+        ...(onboardingData['client_details'] as Map<String, dynamic>? ??
+            <String, dynamic>{}),
+        'address_text': 'Ubicación actual detectada',
         'latitude': 19.4326,
         'longitude': -99.1332,
       };
@@ -62,53 +104,46 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
   }
 
   bool _validateCurrentStep() {
-    if (_currentStep == 0) {
-      return _step1FormKey.currentState?.validate() ?? false;
+    switch (_currentStep) {
+      case 0:
+        return _step1FormKey.currentState?.validate() ?? false;
+      case 1:
+        if (!_locationCaptured) {
+          _showError('Primero usa tu ubicación actual para continuar.');
+          return false;
+        }
+        return true;
+      case 2:
+        final isFormValid = _step3FormKey.currentState?.validate() ?? false;
+        if (!isFormValid) return false;
+        if (_selectedSpecies == null) {
+          _showError('Selecciona el tipo de mascota.');
+          return false;
+        }
+        if (_selectedSex == null) {
+          _showError('Selecciona el sexo de tu mascota.');
+          return false;
+        }
+        return true;
+      case 3:
+        if (_isNeutered == null) {
+          _showError('Indica si tu mascota está esterilizada.');
+          return false;
+        }
+        if (_vaccineStatus == null) {
+          _showError('Selecciona el estado de vacunas.');
+          return false;
+        }
+        return true;
+      case 4:
+        if (_selectedTemperaments.isEmpty) {
+          _showError('Selecciona al menos un rasgo de personalidad.');
+          return false;
+        }
+        return true;
+      default:
+        return true;
     }
-
-    if (_currentStep == 1) {
-      if (!_locationCaptured) {
-        _showError('Primero usa tu ubicacion actual para continuar.');
-        return false;
-      }
-      return true;
-    }
-
-    if (_currentStep == 2) {
-      final isFormValid = _step3FormKey.currentState?.validate() ?? false;
-      if (!isFormValid) return false;
-      if (_selectedSpecies == null) {
-        _showError('Selecciona la especie de tu mascota.');
-        return false;
-      }
-      return true;
-    }
-
-    if (_currentStep == 3) {
-      if (_isNeutered == null) {
-        _showError('Indica si tu mascota esta esterilizada.');
-        return false;
-      }
-      return true;
-    }
-
-    if (_currentStep == 4) {
-      if (_vaccineStatus == null) {
-        _showError('Selecciona el estado de vacunas.');
-        return false;
-      }
-      return true;
-    }
-
-    if (_currentStep == 5) {
-      if (_temperament == null) {
-        _showError('Selecciona el temperamento de la mascota.');
-        return false;
-      }
-      return true;
-    }
-
-    return true;
   }
 
   void _collectCurrentStepData() {
@@ -116,19 +151,21 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
     onboardingData['phone'] = _phoneController.text.trim();
 
     final clientDetails = <String, dynamic>{
-      ...(onboardingData['client_details'] as Map<String, dynamic>? ?? <String, dynamic>{}),
+      ...(onboardingData['client_details'] as Map<String, dynamic>? ??
+          <String, dynamic>{}),
       'address_notes': _homeNotesController.text.trim(),
     };
 
     final petProfile = <String, dynamic>{
-      ...(onboardingData['pet_profile'] as Map<String, dynamic>? ?? <String, dynamic>{}),
+      ...(onboardingData['pet_profile'] as Map<String, dynamic>? ??
+          <String, dynamic>{}),
       'name': _petNameController.text.trim(),
       'species': _selectedSpecies,
+      'sex': _selectedSex,
       'weight_kg': _weightKg,
       'is_neutered': _isNeutered,
       'vaccines_up_to_date': _vaccineStatus,
-      'temperament': _temperament,
-      'sex': 'female',
+      'temperament': _selectedTemperaments.join(','),
     };
 
     onboardingData['client_details'] = clientDetails;
@@ -146,9 +183,11 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
 
     final nextStep = _currentStep + 1;
     setState(() => _currentStep = nextStep);
+    _animationController.reset();
+    _animationController.forward();
     _pageController.animateToPage(
       nextStep,
-      duration: const Duration(milliseconds: 260),
+      duration: const Duration(milliseconds: 350),
       curve: Curves.easeInOut,
     );
   }
@@ -157,9 +196,11 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
     if (_currentStep == 0) return;
     final previous = _currentStep - 1;
     setState(() => _currentStep = previous);
+    _animationController.reset();
+    _animationController.forward();
     _pageController.animateToPage(
       previous,
-      duration: const Duration(milliseconds: 220),
+      duration: const Duration(milliseconds: 300),
       curve: Curves.easeInOut,
     );
   }
@@ -174,7 +215,8 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
       return;
     }
 
-    _showError(authProvider.errorMessage ?? 'No se pudo finalizar onboarding.');
+    _showError(
+        authProvider.errorMessage ?? 'No se pudo finalizar el onboarding.');
   }
 
   void _showError(String message) {
@@ -182,410 +224,9 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
-  Widget _buildStepContainer({
-    required String title,
-    required String subtitle,
-    required Widget child,
-  }) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 24),
-      child: Container(
-        padding: const EdgeInsets.all(18),
-        decoration: VetWarmTheme.softCardDecoration(color: VetWarmTheme.card),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(
-                color: VetWarmTheme.textPrimary,
-                fontSize: 22,
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: VetWarmTheme.textSecondary,
-                fontSize: 13,
-              ),
-            ),
-            const SizedBox(height: 18),
-            child,
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepIdentity() {
-    return _buildStepContainer(
-      title: 'Paso 1: Identidad',
-      subtitle: 'Cuentanos como quieres que te llame el veterinario.',
-      child: Form(
-        key: _step1FormKey,
-        child: Column(
-          children: [
-            TextFormField(
-              controller: _fullNameController,
-              decoration: InputDecoration(
-                labelText: 'Nombre completo',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                filled: true,
-                fillColor: VetWarmTheme.background,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El nombre es requerido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 12),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              decoration: InputDecoration(
-                labelText: 'Telefono movil',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                filled: true,
-                fillColor: VetWarmTheme.background,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El telefono es requerido';
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepLocation() {
-    return _buildStepContainer(
-      title: 'Paso 2: Ubicacion',
-      subtitle: 'Ayudanos a llegar rapido a tu casa.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: _useCurrentLocation,
-              icon: Icon(
-                _locationCaptured ? Icons.check_circle_outline : Icons.my_location,
-              ),
-              label: Text(
-                _locationCaptured ? 'Ubicacion guardada' : 'Usar mi ubicacion actual',
-              ),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 52),
-                backgroundColor: VetWarmTheme.amber,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          TextField(
-            controller: _homeNotesController,
-            maxLines: 3,
-            decoration: InputDecoration(
-              labelText: 'Indicaciones de la casa',
-              hintText: 'Casa azul, tocar timbre dos veces...',
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-              filled: true,
-              fillColor: VetWarmTheme.background,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepPetIdentity() {
-    return _buildStepContainer(
-      title: 'Paso 3: Mascota',
-      subtitle: 'Hablemos de tu mejor amigo.',
-      child: Form(
-        key: _step3FormKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextFormField(
-              controller: _petNameController,
-              decoration: InputDecoration(
-                labelText: 'Nombre de la mascota',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(24)),
-                filled: true,
-                fillColor: VetWarmTheme.background,
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'El nombre de la mascota es requerido';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Especie',
-              style: TextStyle(
-                color: VetWarmTheme.textPrimary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: ['Perro', 'Gato', 'Otro'].map((species) {
-                final selected = _selectedSpecies == species;
-                return ChoiceChip(
-                  label: Text(species),
-                  selected: selected,
-                  onSelected: (_) => setState(() => _selectedSpecies = species),
-                  selectedColor: VetWarmTheme.amber.withValues(alpha: 0.24),
-                  backgroundColor: VetWarmTheme.background,
-                  labelStyle: TextStyle(
-                    color: selected ? VetWarmTheme.textPrimary : VetWarmTheme.textSecondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                    side: BorderSide.none,
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepBiometry() {
-    return _buildStepContainer(
-      title: 'Paso 4: Biometria',
-      subtitle: 'Datos rapidos para preparar dosis y equipo.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Peso aproximado: ${_weightKg.toStringAsFixed(1)} kg',
-            style: const TextStyle(
-              color: VetWarmTheme.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          Slider(
-            value: _weightKg,
-            min: 1,
-            max: 50,
-            divisions: 98,
-            activeColor: VetWarmTheme.amber,
-            onChanged: (value) => setState(() => _weightKg = value),
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Esta esterilizado/a?',
-            style: TextStyle(
-              color: VetWarmTheme.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: [
-              ChoiceChip(
-                label: const Text('Si'),
-                selected: _isNeutered == true,
-                onSelected: (_) => setState(() => _isNeutered = true),
-                selectedColor: VetWarmTheme.amber.withValues(alpha: 0.24),
-                backgroundColor: VetWarmTheme.background,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide.none,
-                ),
-              ),
-              ChoiceChip(
-                label: const Text('No'),
-                selected: _isNeutered == false,
-                onSelected: (_) => setState(() => _isNeutered = false),
-                selectedColor: VetWarmTheme.amber.withValues(alpha: 0.24),
-                backgroundColor: VetWarmTheme.background,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  side: BorderSide.none,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepHealth() {
-    return _buildStepContainer(
-      title: 'Paso 5: Salud',
-      subtitle: 'Solo una confirmacion rapida sobre vacunas.',
-      child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
-        children: [
-          _buildSelectableCard(
-            title: 'Vacunas al dia',
-            selected: _vaccineStatus == 'yes',
-            onTap: () => setState(() => _vaccineStatus = 'yes'),
-          ),
-          _buildSelectableCard(
-            title: 'Vacunas pendientes',
-            selected: _vaccineStatus == 'no',
-            onTap: () => setState(() => _vaccineStatus = 'no'),
-          ),
-          _buildSelectableCard(
-            title: 'No estoy seguro',
-            selected: _vaccineStatus == 'unsure',
-            onTap: () => setState(() => _vaccineStatus = 'unsure'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepTemperament() {
-    return _buildStepContainer(
-      title: 'Paso 6: Temperamento',
-      subtitle: 'Esto ayuda a que el vet llegue preparado.',
-      child: Column(
-        children: [
-          _buildTemperamentCard(
-            icon: Icons.sentiment_very_satisfied_rounded,
-            title: 'Amigable',
-            subtitle: 'Se acerca tranquilo a personas nuevas.',
-            selected: _temperament == 'friendly',
-            onTap: () => setState(() => _temperament = 'friendly'),
-          ),
-          const SizedBox(height: 10),
-          _buildTemperamentCard(
-            icon: Icons.sentiment_neutral_rounded,
-            title: 'Nervioso',
-            subtitle: 'Puede asustarse con facilidad.',
-            selected: _temperament == 'nervous',
-            onTap: () => setState(() => _temperament = 'nervous'),
-          ),
-          const SizedBox(height: 10),
-          _buildTemperamentCard(
-            icon: Icons.warning_amber_rounded,
-            title: 'Agresivo',
-            subtitle: 'Conviene llevar equipo de contencion.',
-            selected: _temperament == 'aggressive',
-            onTap: () => setState(() => _temperament = 'aggressive'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTemperamentCard({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: double.infinity,
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? VetWarmTheme.amber.withValues(alpha: 0.18) : VetWarmTheme.background,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: selected ? VetWarmTheme.amber : Colors.transparent,
-            width: 1.2,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                color: VetWarmTheme.card,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(icon, color: VetWarmTheme.textPrimary),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: VetWarmTheme.textPrimary,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: const TextStyle(
-                      color: VetWarmTheme.textSecondary,
-                      fontSize: 12,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectableCard({
-    required String title,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? VetWarmTheme.amber.withValues(alpha: 0.24) : VetWarmTheme.background,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: selected ? VetWarmTheme.amber : Colors.transparent,
-            width: 1.1,
-          ),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: selected ? VetWarmTheme.textPrimary : VetWarmTheme.textSecondary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        backgroundColor: AppColors.error,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
   }
@@ -595,103 +236,543 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
     final authProvider = context.watch<AuthProvider>();
 
     return Scaffold(
-      backgroundColor: VetWarmTheme.background,
-      appBar: AppBar(
-        title: const Text('Onboarding Cliente'),
-        backgroundColor: VetWarmTheme.background,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 6, 18, 4),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween<double>(begin: 0, end: _progressValue),
-              duration: const Duration(milliseconds: 280),
-              curve: Curves.easeInOut,
-              builder: (context, value, child) {
-                return ClipRRect(
-                  borderRadius: BorderRadius.circular(999),
-                  child: LinearProgressIndicator(
-                    value: value,
-                    minHeight: 8,
-                    backgroundColor: VetWarmTheme.sand,
-                    valueColor: const AlwaysStoppedAnimation<Color>(VetWarmTheme.amber),
-                  ),
-                );
-              },
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'Paso ${_currentStep + 1} de $_totalSteps',
-              style: const TextStyle(
-                color: VetWarmTheme.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
+      backgroundColor: AppColors.backgroundLight,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(),
+            Expanded(
+              child: PageView(
+                controller: _pageController,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  _buildStepIdentity(),
+                  _buildStepLocation(),
+                  _buildStepPetIdentity(),
+                  _buildStepHealth(),
+                  _buildStepTemperament(),
+                ],
               ),
             ),
+            _buildFooter(authProvider),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 16, 24, 8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              if (_currentStep > 0)
+                IconButton(
+                  onPressed: _onBackPressed,
+                  icon: const Icon(Icons.arrow_back_ios),
+                  color: AppColors.textPrimary,
+                )
+              else
+                const SizedBox(width: 48),
+              Expanded(
+                child: Column(
+                  children: [
+                    Text(
+                      _steps[_currentStep].title,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.textPrimary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 48),
+            ],
           ),
+          const SizedBox(height: 16),
+          OnboardingProgressBar(
+            currentStep: _currentStep,
+            totalSteps: _totalSteps,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFooter(AuthProvider authProvider) {
+    final isLastStep = _currentStep == _totalSteps - 1;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          if (_currentStep > 0) ...[
+            Expanded(
+              child: OnboardingSecondaryButton(
+                text: 'Atrás',
+                icon: Icons.arrow_back,
+                onPressed: authProvider.isLoading ? null : _onBackPressed,
+              ),
+            ),
+            const SizedBox(width: 16),
+          ],
           Expanded(
-            child: PageView(
-              controller: _pageController,
-              physics: const NeverScrollableScrollPhysics(),
+            flex: _currentStep > 0 ? 2 : 1,
+            child: OnboardingPrimaryButton(
+              text: isLastStep ? 'Finalizar' : 'Continuar',
+              icon: isLastStep ? Icons.check : Icons.arrow_forward,
+              isLoading: authProvider.isLoading,
+              onPressed: authProvider.isLoading ? null : _onNextPressed,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepContainer({
+    required String subtitle,
+    required IconData icon,
+    required Widget child,
+  }) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStepHeader(subtitle, icon),
+          const SizedBox(height: 24),
+          child,
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStepHeader(String subtitle, IconData icon) {
+    final animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: SlideTransition(
+        position: Tween<Offset>(
+          begin: const Offset(0, 0.1),
+          end: Offset.zero,
+        ).animate(animation),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.primarySurface,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(
+                icon,
+                color: AppColors.primary,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCard({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceLight,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadowLight,
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  Widget _buildStepIdentity() {
+    return _buildStepContainer(
+      subtitle: _steps[0].subtitle,
+      icon: _steps[0].icon,
+      child: _buildCard(
+        child: Form(
+          key: _step1FormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Información personal',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _fullNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre completo',
+                  prefixIcon: Icon(Icons.person_outline),
+                ),
+                textCapitalization: TextCapitalization.words,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El nombre es requerido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
+                controller: _phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: const InputDecoration(
+                  labelText: 'Teléfono móvil',
+                  prefixIcon: Icon(Icons.phone_outlined),
+                ),
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El teléfono es requerido';
+                  }
+                  return null;
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepLocation() {
+    return _buildStepContainer(
+      subtitle: _steps[1].subtitle,
+      icon: _steps[1].icon,
+      child: _buildCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Dirección de visita',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 20),
+            _buildLocationButton(),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _homeNotesController,
+              maxLines: 3,
+              decoration: const InputDecoration(
+                labelText: 'Indicaciones para llegar',
+                hintText: 'Casa azul, tocar timbre dos veces...',
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(bottom: 48),
+                  child: Icon(Icons.notes_outlined),
+                ),
+                alignLabelWithHint: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocationButton() {
+    return GestureDetector(
+      onTap: _useCurrentLocation,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: _locationCaptured
+              ? AppColors.successLight
+              : AppColors.primarySurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: _locationCaptured ? AppColors.success : AppColors.primary,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: _locationCaptured ? AppColors.success : AppColors.primary,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                _locationCaptured ? Icons.check : Icons.my_location,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _locationCaptured
+                        ? 'Ubicación guardada'
+                        : 'Usar mi ubicación actual',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: _locationCaptured
+                              ? AppColors.success
+                              : AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    _locationCaptured
+                        ? 'Tu dirección ha sido registrada'
+                        : 'Toca para detectar tu ubicación',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right,
+              color: _locationCaptured ? AppColors.success : AppColors.primary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepPetIdentity() {
+    return _buildStepContainer(
+      subtitle: _steps[2].subtitle,
+      icon: _steps[2].icon,
+      child: _buildCard(
+        child: Form(
+          key: _step3FormKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Datos de tu mascota',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: _petNameController,
+                decoration: const InputDecoration(
+                  labelText: 'Nombre de tu mascota',
+                  prefixIcon: Icon(Icons.pets_outlined),
+                ),
+                textCapitalization: TextCapitalization.words,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El nombre es requerido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Tipo de mascota',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              PetTypeSelector(
+                selectedType: _selectedSpecies,
+                onTypeSelected: (type) {
+                  setState(() => _selectedSpecies = type);
+                },
+              ),
+              const SizedBox(height: 24),
+              Text(
+                'Sexo',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              const SizedBox(height: 12),
+              PetSexSelector(
+                selectedSex: _selectedSex,
+                onSexSelected: (sex) {
+                  setState(() => _selectedSex = sex);
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepHealth() {
+    return _buildStepContainer(
+      subtitle: _steps[3].subtitle,
+      icon: _steps[3].icon,
+      child: Column(
+        children: [
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildStepIdentity(),
-                _buildStepLocation(),
-                _buildStepPetIdentity(),
-                _buildStepBiometry(),
-                _buildStepHealth(),
-                _buildStepTemperament(),
+                Text(
+                  'Peso aproximado',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${_weightKg.toStringAsFixed(1)}',
+                      style:
+                          Theme.of(context).textTheme.headlineLarge?.copyWith(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'kg',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                    ),
+                  ],
+                ),
+                SliderTheme(
+                  data: SliderTheme.of(context).copyWith(
+                    activeTrackColor: AppColors.primary,
+                    inactiveTrackColor: AppColors.borderLight,
+                    thumbColor: AppColors.primary,
+                    overlayColor: AppColors.primary.withOpacity(0.2),
+                  ),
+                  child: Slider(
+                    value: _weightKg,
+                    min: 1,
+                    max: 50,
+                    divisions: 98,
+                    onChanged: (value) => setState(() => _weightKg = value),
+                  ),
+                ),
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-            child: Row(
+          const SizedBox(height: 16),
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (_currentStep > 0)
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: authProvider.isLoading ? null : _onBackPressed,
-                      style: OutlinedButton.styleFrom(
-                        minimumSize: const Size(double.infinity, 52),
-                        side: const BorderSide(color: VetWarmTheme.sand),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(24),
-                        ),
+                Text(
+                  '¿Está esterilizado/a?',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
                       ),
-                      child: const Text('Atras'),
-                    ),
-                  ),
-                if (_currentStep > 0) const SizedBox(width: 10),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: authProvider.isLoading ? null : _onNextPressed,
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size(double.infinity, 52),
-                      backgroundColor: VetWarmTheme.amber,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildOptionCard(
+                        title: 'Sí',
+                        icon: Icons.check_circle_outline,
+                        isSelected: _isNeutered == true,
+                        onTap: () => setState(() => _isNeutered = true),
                       ),
                     ),
-                    child: authProvider.isLoading
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            _currentStep == _totalSteps - 1
-                                ? 'Finalizar y Entrar'
-                                : 'Siguiente',
-                          ),
-                  ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildOptionCard(
+                        title: 'No',
+                        icon: Icons.cancel_outlined,
+                        isSelected: _isNeutered == false,
+                        onTap: () => setState(() => _isNeutered = false),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Estado de vacunas',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                _buildVaccineOption(
+                  title: 'Vacunas al día',
+                  icon: Icons.verified_outlined,
+                  value: 'yes',
+                ),
+                const SizedBox(height: 8),
+                _buildVaccineOption(
+                  title: 'Vacunas pendientes',
+                  icon: Icons.schedule_outlined,
+                  value: 'no',
+                ),
+                const SizedBox(height: 8),
+                _buildVaccineOption(
+                  title: 'No estoy seguro',
+                  icon: Icons.help_outline,
+                  value: 'unsure',
                 ),
               ],
             ),
@@ -700,4 +781,138 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen> {
       ),
     );
   }
+
+  Widget _buildOptionCard({
+    required String title,
+    required IconData icon,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primarySurface : AppColors.backgroundLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.borderLight,
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+              size: 28,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color:
+                        isSelected ? AppColors.primary : AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVaccineOption({
+    required String title,
+    required IconData icon,
+    required String value,
+  }) {
+    final isSelected = _vaccineStatus == value;
+
+    return GestureDetector(
+      onTap: () => setState(() => _vaccineStatus = value),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primarySurface : AppColors.backgroundLight,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : AppColors.borderLight,
+          ),
+        ),
+        child: Row(
+          children: [
+            Icon(
+              icon,
+              color: isSelected ? AppColors.primary : AppColors.textSecondary,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color:
+                        isSelected ? AppColors.primary : AppColors.textPrimary,
+                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                  ),
+            ),
+            const Spacer(),
+            if (isSelected)
+              const Icon(
+                Icons.check_circle,
+                color: AppColors.primary,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStepTemperament() {
+    return _buildStepContainer(
+      subtitle: _steps[4].subtitle,
+      icon: _steps[4].icon,
+      child: _buildCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Personalidad de tu mascota',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Selecciona los rasgos que mejor describan a tu mascota',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+            ),
+            const SizedBox(height: 20),
+            TemperamentSelector(
+              selectedTemperaments: _selectedTemperaments,
+              onChanged: (temps) {
+                setState(() => _selectedTemperaments = temps);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepInfo {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+
+  const _StepInfo({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+  });
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petixfy/theme/app_colors.dart';
+import 'package:petixfy/widgets/onboarding/animated_builder.dart';
 
 /// Botón principal para onboarding
 class OnboardingPrimaryButton extends StatefulWidget {
@@ -250,17 +251,3 @@ class OnboardingSkipButton extends StatelessWidget {
   }
 }
 
-class AnimatedBuilder extends AnimatedWidget {
-  final Widget Function(BuildContext, Widget?) builder;
-
-  const AnimatedBuilder({
-    super.key,
-    required Animation<double> animation,
-    required this.builder,
-  }) : super(listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    return builder(context, null);
-  }
-}

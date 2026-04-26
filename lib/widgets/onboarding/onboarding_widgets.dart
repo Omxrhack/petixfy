@@ -1,3 +1,4 @@
+export 'animated_builder.dart';
 export 'onboarding_page.dart';
 export 'onboarding_illustration.dart';
 export 'animated_progress_indicator.dart';

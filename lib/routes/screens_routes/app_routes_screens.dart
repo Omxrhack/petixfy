@@ -15,7 +15,12 @@ class AppRoute {
     MenuOptions(
       route: 'SlashScreens',
       title: 'slider',
-      screen: const SlashScreens(),
+      screen: const IntroOnboardingScreen(),
+    ),
+    MenuOptions(
+      route: 'IntroOnboardingScreen',
+      title: 'intro-onboarding',
+      screen: const IntroOnboardingScreen(),
     ),
     MenuOptions(
       route: 'LoginScreen',

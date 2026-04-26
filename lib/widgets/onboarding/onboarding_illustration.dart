@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:petixfy/theme/app_colors.dart';
+import 'package:petixfy/widgets/onboarding/animated_builder.dart';
 
 /// Widget para ilustraciones animadas del onboarding
 class OnboardingIllustration extends StatefulWidget {
@@ -181,17 +182,3 @@ class _OnboardingIconIllustrationState extends State<OnboardingIconIllustration>
   }
 }
 
-class AnimatedBuilder extends AnimatedWidget {
-  final Widget Function(BuildContext, Widget?) builder;
-
-  const AnimatedBuilder({
-    super.key,
-    required Animation<double> animation,
-    required this.builder,
-  }) : super(listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    return builder(context, null);
-  }
-}
