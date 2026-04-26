@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:petixfy/providers/auth_provider.dart';
 import 'package:petixfy/theme/app_colors.dart';
 import 'package:petixfy/widgets/auth/auth_scaffold.dart';
+import 'package:petixfy/widgets/auth/labeled_text_field.dart';
 import 'package:petixfy/widgets/onboarding/onboarding_button.dart';
 
 class RegisterScreen extends StatefulWidget {
@@ -45,13 +46,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
     if (!success) {
       final message = authProvider.errorMessage ?? 'No se pudo registrar';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError(message);
       return;
     }
 
@@ -62,10 +57,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final isLoading = authProvider.isLoading;
+    final textTheme = Theme.of(context).textTheme;
 
     return AuthScaffold(
       title: 'Crear cuenta',
@@ -76,15 +92,23 @@ class _RegisterScreenState extends State<RegisterScreen> {
         children: [
           Text(
             '¿Ya tienes cuenta?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+            ),
           ),
           TextButton(
             onPressed: isLoading
                 ? null
                 : () => Navigator.pushReplacementNamed(context, 'LoginScreen'),
-            child: const Text('Inicia sesión'),
+            child: Text(
+              'Inicia sesión',
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
           ),
         ],
       ),
@@ -93,73 +117,95 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Correo electrónico',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-              validator: (value) {
-                final v = value?.trim() ?? '';
-                if (v.isEmpty) return 'Ingresa tu correo';
-                if (!v.contains('@')) return 'Correo no válido';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              textInputAction: TextInputAction.next,
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                hintText: 'Mínimo $_minPasswordLength caracteres',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            AuthFormCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  LabeledTextField(
+                    label: 'Correo electrónico',
+                    controller: _emailController,
+                    hintText: 'tu@correo.com',
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.email],
+                    validator: (value) {
+                      final v = value?.trim() ?? '';
+                      if (v.isEmpty) return 'Ingresa tu correo';
+                      if (!v.contains('@')) return 'Correo no válido';
+                      return null;
+                    },
                   ),
-                  onPressed: () {
-                    setState(() => _obscurePassword = !_obscurePassword);
-                  },
-                ),
-              ),
-              validator: (value) {
-                final v = value ?? '';
-                if (v.isEmpty) return 'Ingresa una contraseña';
-                if (v.length < _minPasswordLength) {
-                  return 'La contraseña debe tener al menos $_minPasswordLength caracteres';
-                }
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _confirmPasswordController,
-              obscureText: _obscureConfirm,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _submit(),
-              decoration: InputDecoration(
-                labelText: 'Confirmar contraseña',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirm ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+                  const SizedBox(height: 20),
+                  LabeledTextField(
+                    label: 'Contraseña',
+                    controller: _passwordController,
+                    hintText: 'Mínimo $_minPasswordLength caracteres',
+                    helperText:
+                        'Usa al menos $_minPasswordLength caracteres con letras y números',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.next,
+                    autocorrect: false,
+                    autofillHints: const [AutofillHints.newPassword],
+                    suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? 'Mostrar contraseña'
+                          : 'Ocultar contraseña',
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                    ),
+                    validator: (value) {
+                      final v = value ?? '';
+                      if (v.isEmpty) return 'Ingresa una contraseña';
+                      if (v.length < _minPasswordLength) {
+                        return 'La contraseña debe tener al menos '
+                            '$_minPasswordLength caracteres';
+                      }
+                      return null;
+                    },
                   ),
-                  onPressed: () {
-                    setState(() => _obscureConfirm = !_obscureConfirm);
-                  },
-                ),
+                  const SizedBox(height: 20),
+                  LabeledTextField(
+                    label: 'Confirmar contraseña',
+                    controller: _confirmPasswordController,
+                    hintText: 'Vuelve a escribir tu contraseña',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: _obscureConfirm,
+                    textInputAction: TextInputAction.done,
+                    autocorrect: false,
+                    onFieldSubmitted: (_) => _submit(),
+                    suffixIcon: IconButton(
+                      tooltip: _obscureConfirm
+                          ? 'Mostrar contraseña'
+                          : 'Ocultar contraseña',
+                      icon: Icon(
+                        _obscureConfirm
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () {
+                        setState(() => _obscureConfirm = !_obscureConfirm);
+                      },
+                    ),
+                    validator: (value) {
+                      if (value != _passwordController.text) {
+                        return 'Las contraseñas no coinciden';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              validator: (value) {
-                if (value != _passwordController.text) {
-                  return 'Las contraseñas no coinciden';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 28),
             OnboardingPrimaryButton(

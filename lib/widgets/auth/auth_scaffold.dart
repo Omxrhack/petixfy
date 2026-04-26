@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petixfy/theme/app_colors.dart';
 
-/// Layout compartido para pantallas de autenticación (login / registro).
+/// Layout compartido para pantallas de autenticación (login / registro / OTP).
 class AuthScaffold extends StatelessWidget {
   const AuthScaffold({
     super.key,
@@ -10,6 +10,7 @@ class AuthScaffold extends StatelessWidget {
     required this.child,
     this.bottom,
     this.onBack,
+    this.headerIcon,
   });
 
   final String title;
@@ -18,8 +19,16 @@ class AuthScaffold extends StatelessWidget {
   final Widget? bottom;
   final VoidCallback? onBack;
 
+  /// Icono opcional dentro del bloque morado del header.
+  /// Si es null, se usa [Icons.pets] (logo Petixfy).
+  final IconData? headerIcon;
+
+  static const double _maxContentWidth = 480;
+
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -39,63 +48,81 @@ class AuthScaffold extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (onBack != null)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: IconButton(
-                          onPressed: onBack,
-                          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white),
-                          padding: EdgeInsets.zero,
-                          alignment: Alignment.centerLeft,
-                        ),
-                      ),
-                    Row(
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 12),
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 52,
-                          height: 52,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: const Icon(
-                            Icons.pets,
-                            color: Colors.white,
-                            size: 28,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Text(
-                          'Petixfy',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        if (onBack != null)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              onPressed: onBack,
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new,
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
+                                size: 20,
                               ),
+                              padding: EdgeInsets.zero,
+                              alignment: Alignment.centerLeft,
+                              tooltip: 'Volver',
+                            ),
+                          ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.18),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.25),
+                                ),
+                              ),
+                              child: Icon(
+                                headerIcon ?? Icons.pets,
+                                color: Colors.white,
+                                size: 30,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Text(
+                              'Petixfy',
+                              style: textTheme.titleLarge?.copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 32),
+                        Text(
+                          title,
+                          style: textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w700,
+                            height: 1.15,
+                          ),
+                        ),
+                        if (subtitle != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            subtitle!,
+                            style: textTheme.bodyLarge?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.92),
+                              height: 1.4,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: 8),
                       ],
                     ),
-                    const SizedBox(height: 28),
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    if (subtitle != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        subtitle!,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                      ),
-                    ],
-                  ],
+                  ),
                 ),
               ),
               Expanded(
@@ -103,19 +130,24 @@ class AuthScaffold extends StatelessWidget {
                   width: double.infinity,
                   decoration: const BoxDecoration(
                     color: AppColors.backgroundLight,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                    borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
                   ),
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        child,
-                        if (bottom != null) ...[
-                          const SizedBox(height: 16),
-                          bottom!,
-                        ],
-                      ],
+                    padding: const EdgeInsets.fromLTRB(20, 32, 20, 24),
+                    child: Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            child,
+                            if (bottom != null) ...[
+                              const SizedBox(height: 20),
+                              bottom!,
+                            ],
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ),

@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:petixfy/providers/auth_provider.dart';
 import 'package:petixfy/theme/app_colors.dart';
 import 'package:petixfy/widgets/auth/auth_scaffold.dart';
+import 'package:petixfy/widgets/auth/labeled_text_field.dart';
 import 'package:petixfy/widgets/onboarding/onboarding_button.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -37,13 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     if (!success) {
       final message = authProvider.errorMessage ?? 'No se pudo iniciar sesión';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: AppColors.error,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showError(message);
       return;
     }
 
@@ -63,10 +58,31 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
+  void _showError(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authProvider = context.watch<AuthProvider>();
     final isLoading = authProvider.isLoading;
+    final textTheme = Theme.of(context).textTheme;
 
     return AuthScaffold(
       title: 'Iniciar sesión',
@@ -77,15 +93,23 @@ class _LoginScreenState extends State<LoginScreen> {
         children: [
           Text(
             '¿No tienes cuenta?',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                ),
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 15,
+            ),
           ),
           TextButton(
             onPressed: isLoading
                 ? null
                 : () => Navigator.pushNamed(context, 'RegisterScreen'),
-            child: const Text('Regístrate'),
+            child: Text(
+              'Regístrate',
+              style: textTheme.bodyMedium?.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+              ),
+            ),
           ),
         ],
       ),
@@ -94,46 +118,60 @@ class _LoginScreenState extends State<LoginScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              autocorrect: false,
-              textInputAction: TextInputAction.next,
-              decoration: const InputDecoration(
-                labelText: 'Correo electrónico',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
-              validator: (value) {
-                final v = value?.trim() ?? '';
-                if (v.isEmpty) return 'Ingresa tu correo';
-                if (!v.contains('@')) return 'Correo no válido';
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              textInputAction: TextInputAction.done,
-              onFieldSubmitted: (_) => _login(),
-              decoration: InputDecoration(
-                labelText: 'Contraseña',
-                prefixIcon: const Icon(Icons.lock_outline),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscurePassword ? Icons.visibility_outlined : Icons.visibility_off_outlined,
+            AuthFormCard(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  LabeledTextField(
+                    label: 'Correo electrónico',
+                    controller: _emailController,
+                    hintText: 'tu@correo.com',
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.next,
+                    autofillHints: const [AutofillHints.email],
+                    validator: (value) {
+                      final v = value?.trim() ?? '';
+                      if (v.isEmpty) return 'Ingresa tu correo';
+                      if (!v.contains('@')) return 'Correo no válido';
+                      return null;
+                    },
                   ),
-                  onPressed: () {
-                    setState(() => _obscurePassword = !_obscurePassword);
-                  },
-                ),
+                  const SizedBox(height: 20),
+                  LabeledTextField(
+                    label: 'Contraseña',
+                    controller: _passwordController,
+                    hintText: 'Tu contraseña',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: _obscurePassword,
+                    textInputAction: TextInputAction.done,
+                    autocorrect: false,
+                    autofillHints: const [AutofillHints.password],
+                    onFieldSubmitted: (_) => _login(),
+                    suffixIcon: IconButton(
+                      tooltip: _obscurePassword
+                          ? 'Mostrar contraseña'
+                          : 'Ocultar contraseña',
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                      onPressed: () {
+                        setState(() => _obscurePassword = !_obscurePassword);
+                      },
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Ingresa tu contraseña';
+                      }
+                      return null;
+                    },
+                  ),
+                ],
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Ingresa tu contraseña';
-                }
-                return null;
-              },
             ),
             const SizedBox(height: 28),
             OnboardingPrimaryButton(
