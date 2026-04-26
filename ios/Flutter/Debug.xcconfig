@@ -1,2 +1,5 @@
 #include? "Pods/Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"
 #include "Generated.xcconfig"
+// Evita fallos de codesign en native_assets (p. ej. objective_c.framework) cuando el repo
+// vive bajo ~/Documents con iCloud: macOS añade xattrs que codesign rechaza.
+FLUTTER_BUILD_DIR=$(HOME)/Library/Developer/flutter_build/petixfy
