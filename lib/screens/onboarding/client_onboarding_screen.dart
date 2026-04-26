@@ -165,11 +165,68 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen>
       'weight_kg': _weightKg,
       'is_neutered': _isNeutered,
       'vaccines_up_to_date': _vaccineStatus,
-      'temperament': _selectedTemperaments.join(','),
+      'temperament': _mapTemperamentForApi(_selectedTemperaments),
     };
 
     onboardingData['client_details'] = clientDetails;
     onboardingData['pet_profile'] = petProfile;
+  }
+
+  /// Backend [friendly, nervous, aggressive] a partir de los chips de UI.
+  String _mapTemperamentForApi(List<String> selected) {
+    if (selected.isEmpty) return 'friendly';
+    if (selected.any((id) => id == 'shy' || id == 'protective')) {
+      return 'nervous';
+    }
+    return 'friendly';
+  }
+
+  /// Cuerpo conforme a [auth.schema.js] (clientOnboardingSchema).
+  Map<String, dynamic> _buildApiPayload() {
+    _collectCurrentStepData();
+
+    final rawPhone = _phoneController.text.trim();
+    final phoneDigits = rawPhone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+      throw Exception(
+        'El teléfono debe tener entre 8 y 15 dígitos (sin contar espacios).',
+      );
+    }
+    final phone = phoneDigits.length <= 15
+        ? phoneDigits
+        : phoneDigits.substring(phoneDigits.length - 15);
+
+    final clientMap = onboardingData['client_details'] as Map<String, dynamic>?;
+    var addressText =
+        (clientMap?['address_text'] ?? '').toString().trim();
+    if (addressText.length < 5) {
+      addressText = 'Domicilio registrado en la app';
+    }
+
+    final notes = (clientMap?['address_notes'] ?? '').toString().trim();
+    final lat = clientMap?['latitude'];
+    final lng = clientMap?['longitude'];
+
+    return <String, dynamic>{
+      'role': 'client',
+      'full_name': _fullNameController.text.trim(),
+      'phone': phone,
+      'client_details': <String, dynamic>{
+        'address_text': addressText,
+        if (notes.isNotEmpty) 'address_notes': notes,
+        if (lat != null) 'latitude': lat,
+        if (lng != null) 'longitude': lng,
+      },
+      'pet_profile': <String, dynamic>{
+        'name': _petNameController.text.trim(),
+        'species': _selectedSpecies ?? 'other',
+        'sex': _selectedSex,
+        'weight_kg': _weightKg,
+        'is_neutered': _isNeutered,
+        'vaccines_up_to_date': _vaccineStatus,
+        'temperament': _mapTemperamentForApi(_selectedTemperaments),
+      },
+    };
   }
 
   Future<void> _onNextPressed() async {
@@ -207,7 +264,15 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen>
 
   Future<void> _submitOnboarding() async {
     final authProvider = context.read<AuthProvider>();
-    final ok = await authProvider.submitClientOnboarding(onboardingData);
+    Map<String, dynamic> payload;
+    try {
+      payload = _buildApiPayload();
+    } catch (e) {
+      _showError(e.toString().replaceFirst(RegExp(r'^Exception:\s*'), ''));
+      return;
+    }
+
+    final ok = await authProvider.submitClientOnboarding(payload);
     if (!mounted) return;
 
     if (ok) {
@@ -466,6 +531,10 @@ class _ClientOnboardingScreenState extends State<ClientOnboardingScreen>
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
                     return 'El teléfono es requerido';
+                  }
+                  final digits = value.replaceAll(RegExp(r'[^0-9]'), '');
+                  if (digits.length < 8 || digits.length > 15) {
+                    return 'Entre 8 y 15 dígitos (puedes usar + y espacios)';
                   }
                   return null;
                 },

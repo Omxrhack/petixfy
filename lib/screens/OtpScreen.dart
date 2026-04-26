@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:petixfy/providers/auth_provider.dart';
 import 'package:petixfy/services/auth_api.dart';
 import 'package:petixfy/services/auth_state.dart';
 
@@ -89,7 +91,9 @@ class _OtpScreenState extends State<OtpScreen> {
 
     setState(() => _loading = true);
     try {
-      await AuthApi.verifyOtp(email: email, token: _otp);
+      final data = await AuthApi.verifyOtp(email: email, token: _otp);
+      if (!mounted) return;
+      await context.read<AuthProvider>().adoptSessionFromVerify(data);
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, 'ClientOnboardingScreen');
     } catch (e) {

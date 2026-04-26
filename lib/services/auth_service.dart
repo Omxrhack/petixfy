@@ -19,6 +19,25 @@ class AuthService {
 
   final ApiClient _apiClient;
 
+  /// Registro: el backend responde 201 sin tokens; el usuario debe verificar OTP.
+  Future<void> register(String email, String password) async {
+    try {
+      await _apiClient.dio.post(
+        '/api/auth/register',
+        data: {
+          'email': email,
+          'password': password,
+        },
+      );
+    } on AuthServiceException {
+      rethrow;
+    } on DioException catch (e) {
+      throw AuthServiceException(_extractDioMessage(e));
+    } catch (_) {
+      throw const AuthServiceException('Unexpected error while registering');
+    }
+  }
+
   Future<AuthLoginResult> login(String email, String password) async {
     try {
       final response = await _apiClient.dio.post(
@@ -74,7 +93,7 @@ class AuthService {
   Future<Map<String, dynamic>> submitClientOnboarding(Map<String, dynamic> data) async {
     try {
       final response = await _apiClient.dio.post(
-        '/api/auth/onboarding/client',
+        '/api/auth/onboarding',
         data: data,
       );
       return (response.data as Map).cast<String, dynamic>();
