@@ -49,7 +49,7 @@ class _OnboardingIllustrationState extends State<OnboardingIllustration>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _floatAnimation,
       builder: (context, child) {
         return Transform.translate(
@@ -147,7 +147,7 @@ class _OnboardingIconIllustrationState extends State<OnboardingIconIllustration>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _floatAnimation,
       builder: (context, child) {
         return Transform.translate(

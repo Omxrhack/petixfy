@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Widget helper para animaciones reutilizable
-class AnimatedBuilder extends AnimatedWidget {
+/// Widget helper para animaciones reutilizable en onboarding
+class OnboardingAnimatedBuilder extends AnimatedWidget {
   final Widget Function(BuildContext, Widget?) builder;
 
-  const AnimatedBuilder({
+  const OnboardingAnimatedBuilder({
     super.key,
     required Animation<double> animation,
     required this.builder,

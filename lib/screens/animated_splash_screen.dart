@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/app_colors.dart';
+import '../widgets/onboarding/animated_builder.dart';
 
 /// Splash screen animado de Petixfy
 /// Se muestra después del splash nativo con animaciones suaves
@@ -141,7 +142,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _fadeOutController,
       builder: (context, child) {
         return Opacity(
@@ -179,7 +180,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   }
 
   Widget _buildAnimatedLogo() {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _logoController,
       builder: (context, child) {
         return Transform.scale(
@@ -224,7 +225,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   }
 
   Widget _buildAnimatedText() {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _textController,
       builder: (context, child) {
         return SlideTransition(
@@ -257,7 +258,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   }
 
   Widget _buildLoadingIndicator() {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _textController,
       builder: (context, child) {
         return Opacity(
@@ -276,37 +277,3 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen>
   }
 }
 
-/// Widget helper para animaciones
-class AnimatedBuilder extends StatelessWidget {
-  final Animation<double> animation;
-  final Widget Function(BuildContext, Widget?) builder;
-
-  const AnimatedBuilder({
-    super.key,
-    required this.animation,
-    required this.builder,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder2(
-      animation: animation,
-      builder: builder,
-    );
-  }
-}
-
-class AnimatedBuilder2 extends AnimatedWidget {
-  final Widget Function(BuildContext, Widget?) builder;
-
-  const AnimatedBuilder2({
-    super.key,
-    required Animation<double> animation,
-    required this.builder,
-  }) : super(listenable: animation);
-
-  @override
-  Widget build(BuildContext context) {
-    return builder(context, null);
-  }
-}

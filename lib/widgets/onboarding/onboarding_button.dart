@@ -65,7 +65,7 @@ class _OnboardingPrimaryButtonState extends State<OnboardingPrimaryButton>
       onTapDown: widget.onPressed != null ? _onTapDown : null,
       onTapUp: widget.onPressed != null ? _onTapUp : null,
       onTapCancel: widget.onPressed != null ? _onTapCancel : null,
-      child: AnimatedBuilder(
+      child: OnboardingAnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) {
           return Transform.scale(

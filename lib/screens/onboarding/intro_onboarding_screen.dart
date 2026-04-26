@@ -144,7 +144,7 @@ class _IntroOnboardingScreenState extends State<IntroOnboardingScreen>
   }
 
   Widget _buildSlide(_SlideData slide) {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
         return Padding(

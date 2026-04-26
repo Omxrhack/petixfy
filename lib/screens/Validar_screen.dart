@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:petixfy/services/auth_state.dart';
 import 'package:petixfy/theme/app_colors.dart';
+import 'package:petixfy/widgets/onboarding/animated_builder.dart';
 
 class ValidarScreen extends StatefulWidget {
   const ValidarScreen({Key? key}) : super(key: key);
@@ -145,7 +146,7 @@ class _ValidarScreenState extends State<ValidarScreen>
   }
 
   Widget _buildAnimatedLogo() {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _logoController,
       builder: (context, child) {
         return Transform.scale(
@@ -190,7 +191,7 @@ class _ValidarScreenState extends State<ValidarScreen>
   }
 
   Widget _buildAnimatedText() {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _textController,
       builder: (context, child) {
         return SlideTransition(
@@ -223,7 +224,7 @@ class _ValidarScreenState extends State<ValidarScreen>
   }
 
   Widget _buildLoadingIndicator() {
-    return AnimatedBuilder(
+    return OnboardingAnimatedBuilder(
       animation: _textController,
       builder: (context, child) {
         return Opacity(
