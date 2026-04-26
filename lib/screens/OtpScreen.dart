@@ -20,7 +20,10 @@ class OtpScreen extends StatefulWidget {
 }
 
 class _OtpScreenState extends State<OtpScreen> {
-  static const int _otpLength = 6;
+  // El proyecto Supabase remoto está configurado para enviar OTPs de 8
+  // dígitos. Si lo cambias en el dashboard de Supabase a 6, ajusta este
+  // valor para que coincida.
+  static const int _otpLength = 8;
   static const int _resendCountdown = 30;
 
   final List<TextEditingController> _controllers =
@@ -212,7 +215,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'Ingresa el código de 6 dígitos que enviamos a tu correo.',
+                        'Ingresa el código de $_otpLength dígitos que enviamos a tu correo.',
                         style: textTheme.bodyMedium?.copyWith(
                           color: AppColors.textSecondary,
                           fontSize: 15,

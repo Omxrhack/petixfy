@@ -4,7 +4,7 @@ import 'package:petixfy/theme/app_colors.dart';
 
 /// Caja individual para un dígito de un código OTP.
 ///
-/// - Tamaño 54x64 px, esquinas redondeadas y sombra ligera.
+/// - Por defecto 54x64 px, esquinas redondeadas y sombra ligera.
 /// - Resalta el borde cuando recibe foco.
 /// - Soporta borrar con backspace (delegando vía [onBackspace] cuando la caja
 ///   ya está vacía).
@@ -17,6 +17,9 @@ class OtpBox extends StatelessWidget {
     this.onBackspace,
     this.onSubmitted,
     this.autofocus = false,
+    this.width = 54,
+    this.height = 64,
+    this.fontSize = 24,
   });
 
   final TextEditingController controller;
@@ -25,6 +28,9 @@ class OtpBox extends StatelessWidget {
   final VoidCallback? onBackspace;
   final ValueChanged<String>? onSubmitted;
   final bool autofocus;
+  final double width;
+  final double height;
+  final double fontSize;
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +41,8 @@ class OtpBox extends StatelessWidget {
         final hasValue = controller.text.isNotEmpty;
 
         return Container(
-          width: 54,
-          height: 64,
+          width: width,
+          height: height,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(14),
@@ -77,9 +83,9 @@ class OtpBox extends StatelessWidget {
               inputFormatters: [
                 FilteringTextInputFormatter.digitsOnly,
               ],
-              style: const TextStyle(
+              style: TextStyle(
                 color: AppColors.textPrimary,
-                fontSize: 24,
+                fontSize: fontSize,
                 fontWeight: FontWeight.w700,
                 height: 1.0,
               ),
@@ -101,6 +107,8 @@ class OtpBox extends StatelessWidget {
 }
 
 /// Fila de cajas OTP que coordina el foco y el borrado entre ellas.
+/// Calcula automáticamente el ancho de cada caja según el espacio disponible
+/// para que tanto 6 como 8 dígitos se vean bien en cualquier pantalla.
 class OtpBoxGroup extends StatefulWidget {
   const OtpBoxGroup({
     super.key,
@@ -130,8 +138,7 @@ class OtpBoxGroup extends StatefulWidget {
 }
 
 class _OtpBoxGroupState extends State<OtpBoxGroup> {
-  String get _code =>
-      widget.controllers.map((c) => c.text).join();
+  String get _code => widget.controllers.map((c) => c.text).join();
 
   void _handleChanged(int index, String value) {
     if (value.length > 1) {
@@ -163,17 +170,40 @@ class _OtpBoxGroupState extends State<OtpBoxGroup> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: List.generate(widget.length, (i) {
-        return OtpBox(
-          controller: widget.controllers[i],
-          focusNode: widget.focusNodes[i],
-          autofocus: widget.autofocus && i == 0,
-          onChanged: (v) => _handleChanged(i, v),
-          onBackspace: () => _handleBackspace(i),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const minSpacing = 6.0;
+        const maxBoxWidth = 54.0;
+        const minBoxWidth = 36.0;
+
+        // Ancho disponible para cajas (descontando los gaps mínimos).
+        final available =
+            constraints.maxWidth - minSpacing * (widget.length - 1);
+        double boxWidth = (available / widget.length).clamp(
+          minBoxWidth,
+          maxBoxWidth,
         );
-      }),
+
+        // Alto y tamaño de fuente proporcionales al ancho elegido.
+        final boxHeight = boxWidth * (64 / 54);
+        final fontSize = boxWidth * (24 / 54);
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: List.generate(widget.length, (i) {
+            return OtpBox(
+              controller: widget.controllers[i],
+              focusNode: widget.focusNodes[i],
+              autofocus: widget.autofocus && i == 0,
+              width: boxWidth,
+              height: boxHeight,
+              fontSize: fontSize,
+              onChanged: (v) => _handleChanged(i, v),
+              onBackspace: () => _handleBackspace(i),
+            );
+          }),
+        );
+      },
     );
   }
 }
