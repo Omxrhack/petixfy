@@ -38,23 +38,58 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final email = _emailController.text.trim();
     final password = _passwordController.text;
 
-    final success = await authProvider.register(
+    final outcome = await authProvider.register(
       email: email,
       password: password,
     );
 
     if (!mounted) return;
-    if (!success) {
-      final message = authProvider.errorMessage ?? 'No se pudo registrar';
-      _showError(message);
-      return;
-    }
 
-    Navigator.pushNamed(
-      context,
-      'OtpScreen',
-      arguments: {'email': email},
-    );
+    switch (outcome) {
+      case RegisterOutcome.goToOtp:
+        if (authProvider.lastRegisterResent) {
+          _showInfo(
+            'Ese correo ya estaba registrado pero no verificado. '
+            'Te enviamos un nuevo código.',
+          );
+        }
+        Navigator.pushNamed(
+          context,
+          'OtpScreen',
+          arguments: {'email': email},
+        );
+        return;
+      case RegisterOutcome.alreadyVerified:
+        _showInfo(
+          authProvider.errorMessage ??
+              'Este correo ya está registrado. Inicia sesión.',
+        );
+        Navigator.pushReplacementNamed(context, 'LoginScreen');
+        return;
+      case RegisterOutcome.error:
+        _showError(authProvider.errorMessage ?? 'No se pudo registrar');
+        return;
+    }
+  }
+
+  void _showInfo(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
   }
 
   void _showError(String message) {

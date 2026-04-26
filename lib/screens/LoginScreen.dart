@@ -30,16 +30,31 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final authProvider = context.read<AuthProvider>();
-    final success = await authProvider.signIn(
-      email: _emailController.text.trim(),
+    final email = _emailController.text.trim();
+    final outcome = await authProvider.signIn(
+      email: email,
       password: _passwordController.text,
     );
 
     if (!mounted) return;
-    if (!success) {
-      final message = authProvider.errorMessage ?? 'No se pudo iniciar sesión';
-      _showError(message);
-      return;
+
+    switch (outcome) {
+      case LoginOutcome.emailNotConfirmed:
+        _showInfo(
+          authProvider.errorMessage ??
+              'Tu correo no está verificado. Te enviamos un nuevo código.',
+        );
+        Navigator.pushReplacementNamed(
+          context,
+          'OtpScreen',
+          arguments: {'email': email},
+        );
+        return;
+      case LoginOutcome.error:
+        _showError(authProvider.errorMessage ?? 'No se pudo iniciar sesión');
+        return;
+      case LoginOutcome.success:
+        break;
     }
 
     final user = authProvider.currentUser;
@@ -56,6 +71,26 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       Navigator.pushReplacementNamed(context, 'HomeScreen');
     }
+  }
+
+  void _showInfo(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(
+            message,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+          ),
+          backgroundColor: AppColors.primary,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
   }
 
   void _showError(String message) {

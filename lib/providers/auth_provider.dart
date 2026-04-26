@@ -5,6 +5,31 @@ import 'package:petixfy/network/api_client.dart';
 import 'package:petixfy/services/auth_service.dart';
 import 'package:petixfy/services/auth_state.dart';
 
+/// Resultado de un intento de registro.
+enum RegisterOutcome {
+  /// Registro nuevo o reenvío de OTP a un usuario existente sin verificar.
+  /// El cliente debe ir a la pantalla de OTP.
+  goToOtp,
+
+  /// El correo ya estaba registrado y verificado: el cliente debe ir al login.
+  alreadyVerified,
+
+  /// Falló el registro por otra razón (revisar [AuthProvider.errorMessage]).
+  error,
+}
+
+/// Resultado de un intento de login.
+enum LoginOutcome {
+  /// Login exitoso. La pantalla decide a dónde ir según el flag de onboarding.
+  success,
+
+  /// El correo no está confirmado todavía: ir a la pantalla de OTP.
+  emailNotConfirmed,
+
+  /// Credenciales inválidas u otro error: revisar [AuthProvider.errorMessage].
+  error,
+}
+
 class AuthProvider extends ChangeNotifier {
   AuthProvider({
     AuthService? authService,
@@ -20,17 +45,27 @@ class AuthProvider extends ChangeNotifier {
   bool isLoading = false;
   String? errorMessage;
 
+  /// Información extra del último intento de registro.
+  bool lastRegisterResent = false;
+
   /// Registro en backend; limpia sesión local y deja email pendiente de verificación OTP.
-  Future<bool> register({
+  ///
+  /// - Si el correo es nuevo o existe pero no está verificado: [RegisterOutcome.goToOtp].
+  /// - Si el correo ya está verificado: [RegisterOutcome.alreadyVerified].
+  /// - Si hay otro error: [RegisterOutcome.error] (ver [errorMessage]).
+  Future<RegisterOutcome> register({
     required String email,
     required String password,
   }) async {
     isLoading = true;
     errorMessage = null;
+    lastRegisterResent = false;
     notifyListeners();
 
     try {
-      await _authService.register(email, password);
+      final body = await _authService.register(email, password);
+      lastRegisterResent = body['resent'] == true;
+
       await _secureStorage.delete(key: ApiClient.accessTokenKey);
       await _secureStorage.delete(key: ApiClient.refreshTokenKey);
       await AppAuthState.clear();
@@ -43,21 +78,35 @@ class AuthProvider extends ChangeNotifier {
       token = null;
       isLoading = false;
       notifyListeners();
-      return true;
+      return RegisterOutcome.goToOtp;
+    } on AuthServiceException catch (e) {
+      isLoading = false;
+      if (e.code == 'EMAIL_ALREADY_VERIFIED') {
+        errorMessage = e.message;
+        notifyListeners();
+        return RegisterOutcome.alreadyVerified;
+      }
+      errorMessage = e.message;
+      notifyListeners();
+      return RegisterOutcome.error;
     } catch (e) {
       errorMessage = e.toString();
       isLoading = false;
       notifyListeners();
-      return false;
+      return RegisterOutcome.error;
     }
   }
 
-  Future<bool> signIn({
+  /// Email asociado al último intento de login (útil cuando el backend pide ir al OTP).
+  String? lastLoginEmail;
+
+  Future<LoginOutcome> signIn({
     required String email,
     required String password,
   }) async {
     isLoading = true;
     errorMessage = null;
+    lastLoginEmail = email;
     notifyListeners();
 
     try {
@@ -87,14 +136,31 @@ class AuthProvider extends ChangeNotifier {
 
       isLoading = false;
       notifyListeners();
-      return true;
+      return LoginOutcome.success;
+    } on AuthServiceException catch (e) {
+      currentUser = null;
+      token = null;
+      isLoading = false;
+      if (e.code == 'EMAIL_NOT_CONFIRMED') {
+        // Guardamos el email para que la pantalla de OTP lo tenga aunque no haya sesión.
+        await AppAuthState.save(
+          newEmail: email,
+          newIsVerified: false,
+        );
+        errorMessage = e.message;
+        notifyListeners();
+        return LoginOutcome.emailNotConfirmed;
+      }
+      errorMessage = e.message;
+      notifyListeners();
+      return LoginOutcome.error;
     } catch (e) {
       currentUser = null;
       token = null;
       errorMessage = e.toString();
       isLoading = false;
       notifyListeners();
-      return false;
+      return LoginOutcome.error;
     }
   }
 

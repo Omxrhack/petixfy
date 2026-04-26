@@ -76,7 +76,12 @@ class AuthService {
     } on AuthServiceException {
       rethrow;
     } on DioException catch (e) {
-      throw AuthServiceException(_extractDioMessage(e));
+      throw AuthServiceException(
+        _extractDioMessage(e),
+        code: _extractDioCode(e),
+        statusCode: e.response?.statusCode,
+        data: _extractDioData(e),
+      );
     } catch (_) {
       throw const AuthServiceException('Unexpected error while logging in');
     }
@@ -124,11 +129,30 @@ class AuthService {
     }
     return e.message ?? 'Network request failed';
   }
+
+  String? _extractDioCode(DioException e) {
+    final responseData = e.response?.data;
+    if (responseData is Map && responseData['code'] != null) {
+      return responseData['code'].toString();
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _extractDioData(DioException e) {
+    final responseData = e.response?.data;
+    if (responseData is Map) {
+      return responseData.cast<String, dynamic>();
+    }
+    return null;
+  }
 }
 
 class AuthServiceException implements Exception {
-  const AuthServiceException(this.message);
+  const AuthServiceException(this.message, {this.code, this.statusCode, this.data});
   final String message;
+  final String? code;
+  final int? statusCode;
+  final Map<String, dynamic>? data;
 
   @override
   String toString() => message;
