@@ -4,7 +4,13 @@
       "Read(//Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/**)",
       "Read(//Users/omarbermejo/flutter/flutter/bin/cache/**)",
       "Bash(/Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/bin/dart --version)",
-      "Bash(flutter doctor *)"
+      "Bash(flutter doctor *)",
+      "Bash(flutter precache *)",
+      "Bash(xattr /Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/bin/dart)",
+      "Read(//opt/homebrew/share/flutter/bin/cache/dart-sdk/bin/**)",
+      "Bash(/opt/homebrew/Caskroom/flutter/3.38.5/flutter/bin/cache/dart-sdk/bin/dart --version)",
+      "Bash(node -e ' *)",
+      "Bash(ln -s analysis_server_aot.dart.snapshot /Users/omarbermejo/flutter/flutter/bin/cache/dart-sdk/bin/snapshots/analysis_server.dart.snapshot)"
     ]
   }
 }
