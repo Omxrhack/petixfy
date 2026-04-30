@@ -103,6 +103,33 @@ class AppAnimations {
     Duration? duration,
     Curve? curve,
   }) {
+    if (delay != null) {
+      return FutureBuilder(
+        future: Future.delayed(delay),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return Opacity(opacity: 0.0, child: child);
+          }
+          return TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0.0, end: 1.0),
+            duration: duration ?? medium,
+            curve: curve ?? bounce,
+            builder: (context, value, childWidget) {
+              final scale = from + (1 - from) * value;
+              return Transform.scale(
+                scale: scale,
+                child: Opacity(
+                  opacity: value.clamp(0.0, 1.0),
+                  child: childWidget,
+                ),
+              );
+            },
+            child: child,
+          );
+        },
+      );
+    }
+
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0.0, end: 1.0),
       duration: duration ?? medium,
@@ -112,22 +139,12 @@ class AppAnimations {
         return Transform.scale(
           scale: scale,
           child: Opacity(
-            opacity: value,
+            opacity: value.clamp(0.0, 1.0),
             child: child,
           ),
         );
       },
-      child: delay != null
-          ? FutureBuilder(
-              future: Future.delayed(delay),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  return child;
-                }
-                return Opacity(opacity: 0.0, child: child);
-              },
-            )
-          : child,
+      child: child,
     );
   }
 }

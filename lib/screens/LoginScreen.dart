@@ -60,13 +60,14 @@ class _LoginScreenState extends State<LoginScreen> {
         );
         return;
       case LoginOutcome.rateLimited:
-        _showError(
+        _showErrorSnackbar(
           authProvider.errorMessage ??
               'Has pedido demasiados códigos. Espera unos minutos.',
         );
         return;
       case LoginOutcome.error:
-        _showError(authProvider.errorMessage ?? 'No se pudo iniciar sesión');
+        _showErrorSnackbar(
+            authProvider.errorMessage ?? 'No se pudo iniciar sesión');
         return;
       case LoginOutcome.success:
         break;
@@ -108,7 +109,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
   }
 
-  void _showError(String message) {
+  void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(

@@ -47,6 +47,10 @@ dependencies:
   google_maps_flutter: ^2.9.0
   geolocator: ^13.0.2
   google_fonts: ^6.2.1
+  pin_code_fields: ^9.3.0
+  lottie: ^3.3.3
+  pin_code_fields: ^9.3.0
+  lottie: ^3.3.3
 
 dev_dependencies:
   flutter_test:

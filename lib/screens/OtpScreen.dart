@@ -177,7 +177,7 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<void> _resend() async {
     final email = _email?.trim();
     if (email == null || email.isEmpty) {
-      _showError('No se encontró un correo para reenviar el código');
+      _showErrorMessage('No se encontró un correo para reenviar el código');
       return;
     }
     if (_resending) return;

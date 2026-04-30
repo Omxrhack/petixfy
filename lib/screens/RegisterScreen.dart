@@ -107,13 +107,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Navigator.pushReplacementNamed(context, 'LoginScreen');
         return;
       case RegisterOutcome.rateLimited:
-        _showError(
+        _showErrorSnackbar(
           authProvider.errorMessage ??
               'Has pedido demasiados códigos. Espera unos minutos.',
         );
         return;
       case RegisterOutcome.error:
-        _showError(authProvider.errorMessage ?? 'No se pudo registrar');
+        _showErrorSnackbar(
+            authProvider.errorMessage ?? 'No se pudo registrar');
         return;
     }
   }
@@ -139,7 +140,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
   }
 
-  void _showError(String message) {
+  void _showErrorSnackbar(String message) {
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
       ..showSnackBar(
