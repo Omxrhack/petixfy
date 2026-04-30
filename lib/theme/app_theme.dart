@@ -64,7 +64,7 @@ class AppTheme {
   }
 
   // ============================================
-  // TIPOGRAFÍA (Poppins)
+  // TIPOGRAFÍA (Poppins mejorada)
   // ============================================
   static TextTheme _textTheme(Color textColor) {
     return GoogleFonts.poppinsTextTheme().copyWith(
@@ -72,76 +72,105 @@ class AppTheme {
         fontSize: 57,
         fontWeight: FontWeight.w400,
         color: textColor,
+        height: 1.15,
+        letterSpacing: -0.5,
       ),
       displayMedium: GoogleFonts.poppins(
         fontSize: 45,
         fontWeight: FontWeight.w400,
         color: textColor,
+        height: 1.15,
+        letterSpacing: -0.25,
       ),
       displaySmall: GoogleFonts.poppins(
         fontSize: 36,
         fontWeight: FontWeight.w400,
         color: textColor,
+        height: 1.2,
       ),
       headlineLarge: GoogleFonts.poppins(
         fontSize: 32,
         fontWeight: FontWeight.w600,
         color: textColor,
+        height: 1.2,
+        letterSpacing: 0.2,
       ),
       headlineMedium: GoogleFonts.poppins(
         fontSize: 28,
         fontWeight: FontWeight.w600,
         color: textColor,
+        height: 1.25,
+        letterSpacing: 0.15,
       ),
       headlineSmall: GoogleFonts.poppins(
         fontSize: 24,
         fontWeight: FontWeight.w600,
         color: textColor,
+        height: 1.3,
+        letterSpacing: 0.1,
       ),
       titleLarge: GoogleFonts.poppins(
         fontSize: 22,
         fontWeight: FontWeight.w600,
         color: textColor,
+        height: 1.3,
+        letterSpacing: 0.15,
       ),
       titleMedium: GoogleFonts.poppins(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: textColor,
+        height: 1.4,
+        letterSpacing: 0.1,
       ),
       titleSmall: GoogleFonts.poppins(
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: textColor,
+        height: 1.4,
+        letterSpacing: 0.1,
       ),
       bodyLarge: GoogleFonts.poppins(
         fontSize: 16,
         fontWeight: FontWeight.w400,
         color: textColor,
+        height: 1.5,
+        letterSpacing: 0.15,
       ),
       bodyMedium: GoogleFonts.poppins(
         fontSize: 14,
         fontWeight: FontWeight.w400,
         color: textColor,
+        height: 1.5,
+        letterSpacing: 0.1,
       ),
       bodySmall: GoogleFonts.poppins(
         fontSize: 12,
         fontWeight: FontWeight.w400,
         color: textColor.withOpacity(0.8),
+        height: 1.5,
+        letterSpacing: 0.1,
       ),
       labelLarge: GoogleFonts.poppins(
         fontSize: 14,
         fontWeight: FontWeight.w500,
         color: textColor,
+        height: 1.4,
+        letterSpacing: 0.1,
       ),
       labelMedium: GoogleFonts.poppins(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         color: textColor,
+        height: 1.4,
+        letterSpacing: 0.1,
       ),
       labelSmall: GoogleFonts.poppins(
         fontSize: 11,
         fontWeight: FontWeight.w500,
         color: textColor.withOpacity(0.8),
+        height: 1.4,
+        letterSpacing: 0.1,
       ),
     );
   }

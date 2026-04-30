@@ -11,6 +11,7 @@ class AuthScaffold extends StatelessWidget {
     this.bottom,
     this.onBack,
     this.headerIcon,
+    this.illustration,
   });
 
   final String title;
@@ -22,6 +23,9 @@ class AuthScaffold extends StatelessWidget {
   /// Icono opcional dentro del bloque morado del header.
   /// Si es null, se usa [Icons.pets] (logo Petixfy).
   final IconData? headerIcon;
+
+  /// Widget de ilustración opcional que aparece entre el header y el contenido
+  final Widget? illustration;
 
   static const double _maxContentWidth = 480;
 
@@ -37,10 +41,11 @@ class AuthScaffold extends StatelessWidget {
             end: Alignment.bottomCenter,
             colors: [
               AppColors.primaryLight,
+              AppColors.primaryMedium,
               AppColors.primary,
               AppColors.primaryDark,
             ],
-            stops: [0.0, 0.45, 1.0],
+            stops: [0.0, 0.3, 0.6, 1.0],
           ),
         ),
         child: SafeArea(
@@ -71,34 +76,40 @@ class AuthScaffold extends StatelessWidget {
                             ),
                           ),
                         const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            Container(
-                              width: 56,
-                              height: 56,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.18),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                  color: Colors.white.withValues(alpha: 0.25),
+                        Hero(
+                          tag: 'petixfy_logo',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 56,
+                                  height: 56,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withValues(alpha: 0.18),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withValues(alpha: 0.25),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    headerIcon ?? Icons.pets,
+                                    color: Colors.white,
+                                    size: 30,
+                                  ),
                                 ),
-                              ),
-                              child: Icon(
-                                headerIcon ?? Icons.pets,
-                                color: Colors.white,
-                                size: 30,
-                              ),
+                                const SizedBox(width: 14),
+                                Text(
+                                  'Petixfy',
+                                  style: textTheme.titleLarge?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.2,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 14),
-                            Text(
-                              'Petixfy',
-                              style: textTheme.titleLarge?.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                          ],
+                          ),
                         ),
                         const SizedBox(height: 32),
                         Text(
@@ -140,6 +151,12 @@ class AuthScaffold extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
+                            if (illustration != null) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 24),
+                                child: illustration!,
+                              ),
+                            ],
                             child,
                             if (bottom != null) ...[
                               const SizedBox(height: 20),

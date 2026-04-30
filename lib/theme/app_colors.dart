@@ -6,12 +6,13 @@ class AppColors {
   AppColors._();
 
   // ============================================
-  // COLORES PRIMARIOS (Teal)
+  // COLORES PRIMARIOS (Teal más cálido)
   // ============================================
-  static const Color primary = Color(0xFF00A99D);
-  static const Color primaryLight = Color(0xFF00C9B7);
+  static const Color primary = Color(0xFF00B8A9);
+  static const Color primaryLight = Color(0xFF7FD3C1);
   static const Color primaryDark = Color(0xFF008F82);
   static const Color primarySurface = Color(0xFFE0F7F5);
+  static const Color primaryMedium = Color(0xFF4DC4B5);
 
   // ============================================
   // COLORES SECUNDARIOS (Crema/Cálido)
@@ -20,6 +21,11 @@ class AppColors {
   static const Color secondaryDark = Color(0xFFFFE4C4);
   static const Color accent = Color(0xFFF5A623);
   static const Color accentLight = Color(0xFFFFD180);
+  
+  // Colores pastel para ilustraciones
+  static const Color peach = Color(0xFFFFDDD2);
+  static const Color lavender = Color(0xFFE7D4F5);
+  static const Color mint = Color(0xFFD4F5E7);
 
   // ============================================
   // FONDOS
@@ -32,11 +38,11 @@ class AppColors {
   static const Color cardDark = Color(0xFF3D3D3D);
 
   // ============================================
-  // TEXTOS
+  // TEXTOS (mejorado contraste)
   // ============================================
-  static const Color textPrimary = Color(0xFF3D3D3D);
-  static const Color textSecondary = Color(0xFF6B6B6B);
-  static const Color textTertiary = Color(0xFF9E9E9E);
+  static const Color textPrimary = Color(0xFF2D2D2D);
+  static const Color textSecondary = Color(0xFF5A5A5A);
+  static const Color textTertiary = Color(0xFF8E8E8E);
   static const Color textOnPrimary = Color(0xFFFFFFFF);
   static const Color textOnDark = Color(0xFFF5F5F5);
   static const Color textOnDarkSecondary = Color(0xFFB0B0B0);

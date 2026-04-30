@@ -7,6 +7,8 @@ import 'package:petixfy/providers/auth_provider.dart';
 import 'package:petixfy/services/auth_api.dart';
 import 'package:petixfy/services/auth_state.dart';
 import 'package:petixfy/theme/app_colors.dart';
+import 'package:petixfy/utils/animations.dart';
+import 'package:petixfy/widgets/auth/animated_illustration.dart';
 import 'package:petixfy/widgets/auth/auth_scaffold.dart';
 import 'package:petixfy/widgets/auth/labeled_text_field.dart';
 import 'package:petixfy/widgets/auth/otp_box.dart';
@@ -36,6 +38,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
   bool _loading = false;
   bool _resending = false;
+  bool _showError = false;
+  bool _showSuccess = false;
   String? _email;
 
   Timer? _timer;
@@ -119,11 +123,17 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<void> _verify() async {
     final email = _email?.trim();
     if (email == null || email.isEmpty) {
-      _showError('No se encontró un correo para verificar el OTP');
+      _showErrorMessage('No se encontró un correo para verificar el OTP');
       return;
     }
     if (_otp.length != _otpLength) {
-      _showError('Ingresa los $_otpLength dígitos del código');
+      _showErrorMessage('Ingresa los $_otpLength dígitos del código');
+      setState(() {
+        _showError = true;
+      });
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) setState(() => _showError = false);
+      });
       return;
     }
 
@@ -131,11 +141,26 @@ class _OtpScreenState extends State<OtpScreen> {
     try {
       final data = await AuthApi.verifyOtp(email: email, token: _otp);
       if (!mounted) return;
+      
+      setState(() {
+        _loading = false;
+        _showSuccess = true;
+      });
+      
+      await Future.delayed(const Duration(milliseconds: 800));
+      if (!mounted) return;
+      
       await context.read<AuthProvider>().adoptSessionFromVerify(data);
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, 'ClientOnboardingScreen');
     } catch (e) {
-      _showError(e.toString());
+      _showErrorMessage(e.toString());
+      setState(() {
+        _showError = true;
+      });
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) setState(() => _showError = false);
+      });
     } finally {
       if (mounted) {
         setState(() => _loading = false);
@@ -168,13 +193,13 @@ class _OtpScreenState extends State<OtpScreen> {
         _startCountdown();
         return;
       case ResendOtpOutcome.rateLimited:
-        _showError(
+        _showErrorMessage(
           context.read<AuthProvider>().errorMessage ??
               'Has pedido demasiados códigos. Espera unos minutos.',
         );
         return;
       case ResendOtpOutcome.error:
-        _showError(
+        _showErrorMessage(
           context.read<AuthProvider>().errorMessage ??
               'No se pudo reenviar el código',
         );
@@ -203,7 +228,7 @@ class _OtpScreenState extends State<OtpScreen> {
       );
   }
 
-  void _showError(String message) {
+  void _showErrorMessage(String message) {
     if (!mounted) return;
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()
@@ -234,101 +259,120 @@ class _OtpScreenState extends State<OtpScreen> {
       subtitle: 'Te enviamos un código a $email',
       headerIcon: Icons.mark_email_read_outlined,
       onBack: () => Navigator.maybePop(context),
-      bottom: TextButton(
-        onPressed: _loading ? null : () => Navigator.maybePop(context),
-        child: Text(
-          'Cambiar correo',
-          style: textTheme.bodyMedium?.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w600,
-            fontSize: 15,
+      illustration: const AnimatedIllustration(
+        imagePath: 'assets/perro-sin-fondo.png',
+        height: 110,
+      ),
+      bottom: AppAnimations.fadeIn(
+        delay: const Duration(milliseconds: 600),
+        child: TextButton(
+          onPressed: _loading ? null : () => Navigator.maybePop(context),
+          child: Text(
+            'Cambiar correo',
+            style: textTheme.bodyMedium?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 15,
+            ),
           ),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          AuthFormCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
+          ShakeAnimation(
+            trigger: _showError,
+            child: AppAnimations.slideIn(
+              from: const Offset(0, 0.2),
+              delay: const Duration(milliseconds: 200),
+              child: AuthFormCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySurface,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.mail_outline,
-                        color: AppColors.primary,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        'Ingresa el código de $_otpLength dígitos que enviamos a tu correo.',
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 15,
-                          height: 1.4,
+                    Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.primarySurface,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.mail_outline,
+                            color: AppColors.primary,
+                            size: 24,
+                          ),
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Ingresa el código de $_otpLength dígitos que enviamos a tu correo.',
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: AppColors.textSecondary,
+                              fontSize: 15,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    OtpBoxGroup(
+                      length: _otpLength,
+                      controllers: _controllers,
+                      focusNodes: _focusNodes,
+                      onCompleted: _onCompleted,
+                      showSuccess: _showSuccess,
+                    ),
+                    const SizedBox(height: 24),
+                    OnboardingPrimaryButton(
+                      text: 'Verificar',
+                      icon: Icons.check_circle_outline,
+                      isLoading: _loading,
+                      onPressed: _loading ? null : _verify,
+                    ),
+                    const SizedBox(height: 16),
+                    Center(
+                      child: AnimatedSwitcher(
+                        duration: AppAnimations.medium,
+                        child: _secondsLeft > 0
+                            ? Text(
+                                key: ValueKey('countdown_$_secondsLeft'),
+                                '¿No te llegó? Reenviar en ${_secondsLeft}s',
+                                style: textTheme.bodyMedium?.copyWith(
+                                  color: AppColors.textTertiary,
+                                  fontSize: 14,
+                                ),
+                              )
+                            : TextButton(
+                                key: const ValueKey('resend_button'),
+                                onPressed: (_loading || _resending)
+                                    ? null
+                                    : _resend,
+                                child: _resending
+                                    ? const SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: LoadingDots(
+                                          color: AppColors.primary,
+                                          size: 6,
+                                        ),
+                                      )
+                                    : Text(
+                                        'Reenviar código',
+                                        style: textTheme.bodyMedium?.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15,
+                                        ),
+                                      ),
+                              ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 24),
-                OtpBoxGroup(
-                  length: _otpLength,
-                  controllers: _controllers,
-                  focusNodes: _focusNodes,
-                  onCompleted: _onCompleted,
-                ),
-                const SizedBox(height: 24),
-                OnboardingPrimaryButton(
-                  text: 'Verificar',
-                  icon: Icons.check_circle_outline,
-                  isLoading: _loading,
-                  onPressed: _loading ? null : _verify,
-                ),
-                const SizedBox(height: 16),
-                Center(
-                  child: _secondsLeft > 0
-                      ? Text(
-                          '¿No te llegó? Reenviar en ${_secondsLeft}s',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: AppColors.textTertiary,
-                            fontSize: 14,
-                          ),
-                        )
-                      : TextButton(
-                          onPressed:
-                              (_loading || _resending) ? null : _resend,
-                          child: _resending
-                              ? const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      AppColors.primary,
-                                    ),
-                                  ),
-                                )
-                              : Text(
-                                  'Reenviar código',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                    fontSize: 15,
-                                  ),
-                                ),
-                        ),
-                ),
-              ],
+              ),
             ),
           ),
         ],
